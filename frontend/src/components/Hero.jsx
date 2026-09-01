@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import axios from 'axios'
-import Aurora from './Aurora'
+const Aurora = lazy(() => import('./Aurora'))
 import FloatingIcons from './FloatingIcons'
 import GradientText from './GradientText/GradientText'
 import './Hero.css'
@@ -102,12 +102,14 @@ export default function Hero() {
 
       {/* 流光极光背景（WebGL 着色器） */}
       <div className="hero-aurora">
-        <Aurora
-          colorStops={['#0b1e4d', '#2563eb', '#22d3ee']}
-          amplitude={1.1}
-          blend={0.72}
-          speed={2}
-        />
+        <Suspense fallback={null}>
+          <Aurora
+            colorStops={['#0b1e4d', '#2563eb', '#22d3ee']}
+            amplitude={1.1}
+            blend={0.72}
+            speed={2}
+          />
+        </Suspense>
       </div>
 
       <div className="hero-overlay" />
