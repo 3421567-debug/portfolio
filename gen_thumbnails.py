@@ -17,7 +17,7 @@ WORK_DIRS = [
     os.path.join(ROOT, 'frontend', 'public', 'media', 'works'),
 ]
 
-THUMB_MAX = 1000      # 缩略图最长边(px)
+THUMB_MAX = 800       # 缩略图最长边(px)：网格列宽仅~300px(CSS)，2x 视网膜也只需~600px，800px 足够清晰且比 1000px 小约 30%
 QUALITY = 82          # JPEG 质量
 
 EXTS = ('.jpg', '.jpeg', '.png', '.webp')

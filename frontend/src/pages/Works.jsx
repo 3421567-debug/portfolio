@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react'
 import api from '../api'
-import WorkGallery from '../components/WorkGallery'
 import './Works.css'
+
+// 画廊组件仅在用户点开某个分类时才需要，懒加载拆为独立 chunk，缩小首屏 JS
+const WorkGallery = lazy(() => import('../components/WorkGallery'))
 
 // ═══ 每个分类：强调色 + 英文标题 + 描述（套用 gpt网页 卡片设计）═══
 const CATEGORY_CONFIG = {
@@ -168,12 +170,14 @@ export default function Works() {
       </div>
 
       {galleryCat && (
-        <WorkGallery
-          category={galleryCat}
-          images={galleryImages}
-          loading={galleryLoading}
-          onClose={closeGallery}
-        />
+        <Suspense fallback={null}>
+          <WorkGallery
+            category={galleryCat}
+            images={galleryImages}
+            loading={galleryLoading}
+            onClose={closeGallery}
+          />
+        </Suspense>
       )}
     </section>
   )

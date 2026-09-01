@@ -44,7 +44,7 @@ export default function Navbar() {
   return (
     <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
       <img
-        src={asset('/logo.png')}
+        src={asset('/logo.webp')}
         alt="Logo"
         className="nav-logo"
         onClick={() => scrollTo('hero')}
