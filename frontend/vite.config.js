@@ -34,5 +34,19 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
+    // 拆分 vendor 分包：浏览器可并行下载、且 react 等稳定依赖可独立长缓存，
+    // 后续改业务代码时无需重新下载 vendor 包，缩短二次访问耗时。
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return
+          if (id.includes('react-dom') || id.includes('/react/') || id.includes('react-router') || id.includes('scheduler')) return 'react-vendor'
+          if (id.includes('ogl')) return 'ogl'
+          if (id.includes('react-icons')) return 'icons'
+          if (id.includes('axios')) return 'axios'
+          return 'vendor'
+        },
+      },
+    },
   },
 })
