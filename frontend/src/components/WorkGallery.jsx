@@ -111,7 +111,7 @@ export default function WorkGallery({ category, images, loading, onClose }) {
                   onClick={(e) => { e.stopPropagation(); setFullscreenIdx(i) }}
                 >
                   <img
-                    src={asset(img.image)}
+                    src={asset(img.thumbnail || img.image)}
                     alt={img.title || `作品 ${img.id}`}
                     loading="lazy"
                     draggable={false}

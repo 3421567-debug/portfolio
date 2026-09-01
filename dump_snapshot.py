@@ -26,6 +26,14 @@ def rel(field):
     return field.url  # 已是 MEDIA_URL + name 的形式
 
 
+def thumb_of(url):
+    """根据原图 URL 推导缩略图 URL：/media/works/NAME.ext -> /media/works/thumbs/NAME.jpg"""
+    if not url or '/media/works/' not in url:
+        return None
+    name = url.rsplit('/', 1)[-1].rsplit('.', 1)[0]
+    return '/media/works/thumbs/' + name + '.jpg'
+
+
 snapshot = {}
 
 # ── /about/ ──────────────────────────────────────────────
@@ -73,6 +81,7 @@ for cat in categories:
         'slug': cat.slug,
         'count': len(imgs),
         'cover': rel(imgs[0].image) if imgs else None,
+        'cover_thumb': thumb_of(rel(imgs[0].image)) if imgs else None,
         'preview_works': [img.title for img in imgs[:5]] if imgs else [],
     })
 snapshot['/works/categories/'] = cat_list
@@ -81,7 +90,8 @@ snapshot['/works/categories/'] = cat_list
 for cat in categories:
     imgs = cat.images.all().order_by('title')
     snapshot[f'/works/{cat.id}/'] = [
-        {'id': img.id, 'title': img.title, 'image': rel(img.image), 'display_mode': img.display_mode}
+        {'id': img.id, 'title': img.title, 'image': rel(img.image),
+         'thumbnail': thumb_of(rel(img.image)), 'display_mode': img.display_mode}
         for img in imgs
     ]
 
