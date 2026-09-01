@@ -1,0 +1,113 @@
+/* ═══════════════════════════════════════════
+   全站统一背景层（AppBackground）
+   - fixed + z-index:-1 + pointer-events:none，常驻视口
+   - 统一深/浅底 + 多处主题色弥散晕染（模糊色斑）+ 暗角
+   - 各页面区块透明共用此层，滚动无割裂；主题为 CSS 变量整体替换
+   ═══════════════════════════════════════════ */
+
+.app-background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background-color: var(--bg-base);
+}
+
+/* 主题色模糊色斑：大尺寸 + 重模糊 + 有机圆角，形成自然弥散的色块 */
+.bg-blob {
+  position: absolute;
+  border-radius: 42% 58% 63% 37% / 45% 38% 62% 55%;
+  opacity: 0.85;
+  will-change: transform;
+  transition: opacity 0.6s ease;
+}
+
+/* 顶部 · 蓝：大面积铺开，奠定主调 */
+.bg-blob--1 {
+  top: -18vmax;
+  left: 50%;
+  width: 72vmax;
+  height: 54vmax;
+  margin-left: -36vmax;
+  background: var(--bg-blob-1);
+  filter: blur(140px);
+  animation: blobDrift1 26s ease-in-out infinite alternate;
+}
+
+/* 右下 · 靛：与顶部蓝衔接，向右下弥散 */
+.bg-blob--2 {
+  right: -16vmax;
+  bottom: -20vmax;
+  width: 60vmax;
+  height: 52vmax;
+  background: var(--bg-blob-2);
+  filter: blur(130px);
+  animation: blobDrift2 32s ease-in-out infinite alternate;
+}
+
+/* 左侧 · 紫：中段补色，拉开冷暖层次 */
+.bg-blob--3 {
+  left: -18vmax;
+  top: 40vh;
+  width: 48vmax;
+  height: 48vmax;
+  background: var(--bg-blob-3);
+  filter: blur(150px);
+  animation: blobDrift3 30s ease-in-out infinite alternate;
+}
+
+/* 中部 · 青：点缀性晕染，呼应作品卡的青色调 */
+.bg-blob--4 {
+  left: 34vw;
+  bottom: -24vmax;
+  width: 42vmax;
+  height: 40vmax;
+  background: var(--bg-blob-4);
+  filter: blur(120px);
+  animation: blobDrift4 36s ease-in-out infinite alternate;
+}
+
+/* 暗角：聚焦中心内容、增加纵深 */
+.bg-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(125% 125% at 50% 48%, transparent 52%, var(--bg-vignette) 100%);
+}
+
+/* 极缓慢、小幅度的漂移，营造“弥散流动”的氛围感而不喧宾夺主 */
+@keyframes blobDrift1 {
+  from { transform: translate3d(-3%, 0, 0) scale(1); }
+  to   { transform: translate3d(4%, 6%, 0) scale(1.08); }
+}
+@keyframes blobDrift2 {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(-5%, -4%, 0) scale(1.1); }
+}
+@keyframes blobDrift3 {
+  from { transform: translate3d(0, 0, 0) scale(1.05); }
+  to   { transform: translate3d(6%, -3%, 0) scale(1); }
+}
+@keyframes blobDrift4 {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(-4%, 5%, 0) scale(1.12); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-blob { animation: none !important; }
+}
+
+/* 深色模式：缩小色斑尺寸、弱化高亮区域，营造柔和沉浸的蓝色弥散光晕，
+   避免大块亮区抢眼、影响阅读；浅色模式沿用默认尺寸不受影响 */
+[data-theme="dark"] .bg-blob--1 {
+  width: 52vmax; height: 40vmax; margin-left: -26vmax;
+}
+[data-theme="dark"] .bg-blob--2 {
+  width: 44vmax; height: 38vmax;
+}
+[data-theme="dark"] .bg-blob--3 {
+  width: 36vmax; height: 36vmax;
+}
+[data-theme="dark"] .bg-blob--4 {
+  width: 32vmax; height: 30vmax;
+}

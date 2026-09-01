@@ -1,0 +1,166 @@
+/* ===== CSS Reset & Variables ===== */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  cursor: url('/cursor.png') 6 6, auto;
+}
+
+button,
+a,
+[role="button"] {
+  cursor: url('/cursor.png') 6 6, pointer;
+}
+
+:root {
+  --container-max: 1700px;
+  --navbar-height: 61px;
+  --font-sans: 'Inter', 'PingFang SC', 'Microsoft YaHei', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── 全站统一背景：区块垂直间距规范 ── */
+  --section-pad-y: 120px;
+}
+
+/* ===== Dark Theme (default) ===== */
+[data-theme="dark"] {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #111118;
+  --bg-card: rgba(20, 20, 30, 0.6);
+  --bg-glass: rgba(18, 18, 28, 0.7);
+  --text-primary: #f0f0f5;
+  --text-secondary: #8888a0;
+  --text-muted: #555570;
+  --accent: #3b82f6;
+  --accent-glow: rgba(59, 130, 246, 0.3);
+  --accent-secondary: #60a5fa;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-light: rgba(255, 255, 255, 0.1);
+  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.3);
+  --gradient-hero: linear-gradient(180deg, rgba(10,10,15,0) 0%, rgba(10,10,15,0.8) 70%, rgba(10,10,15,1) 100%);
+
+  /* ── 全站统一背景系统（连续背景层 + 统一光晕/暗角，消除区块割裂）── */
+  --bg-base: #04060c;                       /* 统一深底（更沉、更沉浸） */
+  --bg-blob-1: rgba(59, 130, 246, 0.15);   /* 蓝 · 顶部弥散（克制、朦胧） */
+  --bg-blob-2: rgba(79, 110, 246, 0.10);   /* 靛蓝 · 右下，弱 */
+  --bg-blob-3: rgba(99, 102, 241, 0.07);   /* 紫 · 左侧，极弱点缀 */
+  --bg-blob-4: rgba(56, 189, 248, 0.07);   /* 青 · 中部，极弱点缀 */
+  --bg-vignette: rgba(0, 0, 0, 0.55);       /* 暗角加强，聚焦中心、提升沉浸 */
+}
+
+/* ===== Light Theme ===== */
+[data-theme="light"] {
+  --bg-primary: #f8f9fc;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.8);
+  --bg-glass: rgba(255, 255, 255, 0.7);
+  --text-primary: #1a1a2e;
+  --text-secondary: #6b6b80;
+  --text-muted: #9999aa;
+  --accent: #3b82f6;
+  --accent-glow: rgba(59, 130, 246, 0.15);
+  --accent-secondary: #60a5fa;
+  --border: rgba(0, 0, 0, 0.06);
+  --border-light: rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.06);
+  --gradient-hero: linear-gradient(180deg, rgba(248,249,252,0) 0%, rgba(248,249,252,0.8) 70%, rgba(248,249,252,1) 100%);
+
+  /* ── 全站统一背景系统（浅色）── */
+  --bg-base: #f2f5fc;
+  --bg-blob-1: rgba(59, 130, 246, 0.16);
+  --bg-blob-2: rgba(99, 102, 241, 0.12);
+  --bg-blob-3: rgba(139, 92, 246, 0.10);
+  --bg-blob-4: rgba(56, 189, 248, 0.10);
+  --bg-vignette: rgba(15, 23, 42, 0.06);
+}
+
+/* ===== Base ===== */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button {
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ===== Utility ===== */
+.container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+.section {
+  padding: 120px 0;
+}
+
+/* ===== Scrollbar (consistent width in BOTH themes to avoid layout shift on toggle) ===== */
+html {
+  scrollbar-gutter: stable;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* ===== Fade-in animation ===== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up {
+  animation: fadeUp 0.8s ease forwards;
+}

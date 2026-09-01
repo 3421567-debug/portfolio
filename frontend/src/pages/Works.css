@@ -1,0 +1,329 @@
+/* ═══════════════════════════════════════════
+   Works — 玻璃拟态分类卡片（参考 gpt网页/index.html 设计）
+   四分类：人像摄影 / 风景摄影 / 视觉设计 / AIGC
+   ═══════════════════════════════════════════ */
+
+.works-section {
+  padding: var(--section-pad-y) 0 100px;
+  min-height: 100vh;
+  background: transparent;   /* 统一背景由全局 .app-background 提供 */
+}
+
+/* ── Section header ── */
+.section-header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.section-tag {
+  font-size: 12px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.section-title {
+  font-size: clamp(28px, 3.8vw, 42px);
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.8px;
+  line-height: 1.15;
+}
+
+.section-line {
+  width: 56px;
+  height: 3px;
+  border-radius: 2px;
+  margin: 18px auto 0;
+  background: linear-gradient(90deg, #508cd6, #818cf8);
+}
+
+.section-sub {
+  margin-top: 14px;
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  letter-spacing: .3px;
+}
+
+/* ── 卡片网格 ── */
+.portfolio-wrap {
+  max-width: 1280px;
+  margin: 48px auto 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(28px, 3.5vw, 44px);
+  justify-items: center;
+  padding: 0 32px;
+}
+
+/* ═══════════════════════════════════════════
+   玻璃拟态分类卡片
+   ═══════════════════════════════════════════ */
+.wcard {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 28px;
+  min-height: 380px;
+  filter:
+    drop-shadow(0 18px 28px rgba(0, 0, 0, 0.28))
+    drop-shadow(0 40px 72px rgba(0, 0, 0, 0.32));
+  will-change: transform;
+  transition: transform 360ms cubic-bezier(.22, .8, .25, 1), filter 360ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wcard-body {
+  height: 100%;
+  min-height: 380px;
+  border-radius: 28px;
+  padding: 44px 30px 32px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  text-align: left;
+  /* 统一字体族（含 CJK 回退），确保四卡片中英文字体一致 */
+  font-family: "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background:
+    linear-gradient(
+      175deg,
+      rgba(255, 255, 255, 0.10) 0%,
+      rgba(255, 255, 255, 0.04) 14%,
+      rgba(22, 20, 32, 0.68) 42%,
+      rgba(16, 14, 24, 0.90) 70%,
+      rgba(13, 11, 20, 0.96) 100%
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 38px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(24px) saturate(135%);
+  -webkit-backdrop-filter: blur(24px) saturate(135%);
+  transition: box-shadow 360ms ease, border-color 360ms ease;
+}
+
+/* 强调色叠加层 */
+.wcard-body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 16%, transparent) 0%,
+      color-mix(in srgb, var(--accent) 5%, transparent) 30%,
+      transparent 55%,
+      color-mix(in srgb, var(--accent) 8%, transparent) 100%
+    );
+  opacity: 0.85;
+  transition: opacity 360ms ease;
+}
+
+/* 顶部高光 */
+.wcard-body::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 42%;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, transparent 100%);
+}
+
+.wcard-body > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── 图标（参考 gpt网页 内联 SVG，统一线框风格）── */
+.wcard-icon {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  display: block;
+  color: var(--accent);
+}
+.wcard-icon-svg {
+  display: block;
+  width: 46px;
+  height: 46px;
+  stroke: currentColor;
+  stroke-width: 2.35;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── 标题 / 英文 / 描述 ── */
+.wcard-title {
+  margin: 1.35rem 0 0;
+  font-size: clamp(1.3rem, 1.7vw, 1.7rem);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.wcard-en {
+  margin: 0.4rem 0 0;
+  color: rgba(255, 255, 255, 0.54);
+  letter-spacing: 0.15em;
+  font-size: 0.76rem;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.wcard-desc {
+  margin-top: auto;
+  margin-bottom: 1.2rem;
+  padding-right: 2.5rem;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 2.0;
+  font-size: 0.92rem;
+  font-weight: 350;
+  white-space: pre-line;
+}
+
+/* ── 箭头 ── */
+.wcard-more {
+  position: absolute;
+  right: 30px;
+  bottom: 28px;
+  width: 2.3rem;
+  height: 2.3rem;
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 1.45rem;
+  line-height: 1;
+  transition: transform 0.18s ease, color 0.18s ease;
+}
+
+/* ── hover：上浮 + 强调色描边/辉光 ── */
+.wcard:hover {
+  transform: translateY(-8px);
+  filter:
+    drop-shadow(0 22px 34px rgba(0, 0, 0, 0.30))
+    drop-shadow(0 48px 84px rgba(0, 0, 0, 0.38));
+}
+
+.wcard:hover .wcard-body {
+  border-color: color-mix(in srgb, var(--accent) 78%, rgba(255, 255, 255, 0.42));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent),
+    0 0 46px color-mix(in srgb, var(--accent) 28%, transparent),
+    0 26px 52px rgba(0, 0, 0, 0.26);
+}
+
+.wcard:hover .wcard-body::before { opacity: 1; }
+
+.wcard:hover .wcard-more {
+  transform: translateX(4px);
+  color: #fff;
+}
+
+.wcard:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+/* ── 进场动画（滚动触发，每次进入视口重播） ── */
+.portfolio-wrap:not(.in-view) .wcard { opacity: 0; }
+.portfolio-wrap.in-view .wcard {
+  animation: folderIn 0.62s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes folderIn {
+  from { opacity: 0; transform: translateY(44px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* ── 响应式 ── */
+@media (prefers-reduced-motion: reduce) {
+  .wcard, .wcard-body, .wcard-more { transition: none; }
+}
+
+@media (max-width: 1100px) {
+  .portfolio-wrap {
+    grid-template-columns: repeat(2, 1fr);
+    gap: clamp(20px, 3vw, 32px);
+    max-width: 800px;
+  }
+  .wcard { max-width: 420px; }
+}
+
+@media (max-width: 640px) {
+  .portfolio-wrap {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    max-width: 420px;
+  }
+  .wcard { max-width: 420px; }
+  .wcard-body { min-height: 340px; }
+  .wcard-desc { margin-top: auto; margin-bottom: 1rem; }
+  .wcard-more { right: 24px; bottom: 24px; }
+}
+
+/* ═══ 浅色模式：玻璃卡片转为亮色，去掉黑底黑条，配色统一为浅色高级质感 ═══
+   优化：① 整体减轻投影（避免厚重）② 不再用纯白，改为带极淡强调色相的渐变，
+   让每张卡拥有自己的微妙色调与层次，提升质感 */
+[data-theme="light"] .wcard {
+  filter:
+    drop-shadow(0 8px 16px rgba(15, 23, 42, 0.06))
+    drop-shadow(0 18px 32px rgba(15, 23, 42, 0.06));
+}
+
+[data-theme="light"] .wcard-body {
+  /* 轻微色相 + 渐变：顶部带一丝卡色、底部收回近白，避免纯白死板 */
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--accent) 9%, #ffffff) 0%,
+      color-mix(in srgb, var(--accent) 4%, #fbfcff) 48%,
+      color-mix(in srgb, var(--accent) 2%, #f3f6fb) 100%
+    );
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 10px 26px rgba(15, 23, 42, 0.06);   /* 减弱阴影强度 */
+}
+[data-theme="light"] .wcard-body::before {
+  opacity: 0.4;   /* 浅色底上强调色叠加调淡，避免过度饱和 */
+}
+[data-theme="light"] .wcard-body::after {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, transparent 100%);
+}
+[data-theme="light"] .wcard-icon {
+  color: color-mix(in srgb, var(--accent) 62%, #0f172a);
+}
+[data-theme="light"] .wcard-title { color: #0f172a; }
+[data-theme="light"] .wcard-en { color: #64748b; }
+[data-theme="light"] .wcard-desc { color: #475569; }
+[data-theme="light"] .wcard-more { color: #334155; }
+
+[data-theme="light"] .wcard:hover {
+  filter:
+    drop-shadow(0 12px 20px rgba(15, 23, 42, 0.07))
+    drop-shadow(0 24px 42px rgba(15, 23, 42, 0.08));
+}
+[data-theme="light"] .wcard:hover .wcard-more { color: #0f172a; }
+[data-theme="light"] .wcard:hover .wcard-body {
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent),
+    0 14px 40px color-mix(in srgb, var(--accent) 16%, transparent),
+    0 22px 44px rgba(15, 23, 42, 0.08);
+}
+[data-theme="light"] .wcard:hover .wcard-body::before { opacity: 0.85; }

@@ -1,0 +1,319 @@
+/* ═══════════════════════════════════════════
+   WorkGallery — 瀑布流（Masonry）画廊
+   布局：全屏深色背景 + CSS column 瀑布流网格
+   交互：点击图片→全屏单图（滚轮缩放+左右切换）
+   ═══════════════════════════════════════════ */
+
+/* ── 全屏遮罩 ── */
+.gallery-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  background: rgba(6, 6, 10, .96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: galleryFade .3s ease forwards;
+}
+
+@keyframes galleryFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── 关闭按钮 ── */
+.gallery-close {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .12);
+  color: #fff;
+  font-size: 20px;
+  transition: all .25s ease;
+  z-index: 70;
+}
+
+.gallery-close:hover {
+  background: var(--accent, #508cd6);
+  border-color: var(--accent, #508cd6);
+  transform: rotate(90deg);
+}
+
+/* ── 顶栏（分类名 + 数量） ── */
+.gallery-topbar {
+  position: absolute;
+  top: 22px;
+  left: 28px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 15;
+  pointer-events: none;
+}
+
+.gallery-cat {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: .3px;
+}
+
+.gallery-counter {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, .55);
+  background: rgba(255, 255, 255, .08);
+  border-radius: 999px;
+  padding: 3px 12px;
+}
+
+/* ══════════════════════════════════
+   瀑布流网格（Masonry Grid）
+   JS 分列 + flex 纵向布局：始终纵向滚动，杜绝横向溢出
+   ══════════════════════════════════ */
+.gallery-masonry {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 72px 28px 40px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.15) transparent;
+}
+
+.gallery-masonry::-webkit-scrollbar {
+  width: 5px;
+}
+.gallery-masonry::-webkit-scrollbar-track {
+  background: transparent;
+}
+.gallery-masonry::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, .15);
+  border-radius: 3px;
+}
+
+/* 单列容器：等宽、可收缩、纵向堆叠 */
+.gallery-col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* 每张卡片 */
+.gallery-masonry-item {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid rgba(255, 255, 255, .06);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(22px) scale(.985);
+  animation: masonryItemIn .65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transition: transform .4s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow .4s ease,
+              border-color .4s ease;
+  will-change: transform, opacity;
+}
+
+@keyframes masonryItemIn {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(.985);
+    filter: blur(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.gallery-masonry-item img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transform-origin: center center;
+  transition: transform 0.3s ease;
+}
+
+/* hover：图片在卡片框内缩放至 1.05（.gallery-masonry-item 的 overflow:hidden 裁切溢出，
+   不侵占相邻图、不破坏布局）；卡片本身仅以蓝色辉光 + 描边作反馈，不再整体放大以免重叠 */
+.gallery-masonry-item:hover {
+  box-shadow: 0 24px 64px rgba(0, 0, 0, .5),
+              0 0 0 1px rgba(80, 140, 214, .35);
+  border-color: rgba(255, 255, 255, .18);
+}
+
+.gallery-masonry-item:hover img {
+  transform: scale(1.05);
+  will-change: transform;
+}
+
+/* ══════════════════════════════════
+   全屏单图查看（点击瀑布流某张后）
+   设计感展开 + 上下滚动浏览 + 左侧上下切换
+   ══════════════════════════════════ */
+.gallery-zoom {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 50%, rgba(18, 20, 30, .85), rgba(2, 2, 4, .97));
+  cursor: default;
+}
+
+.gallery-zoom-frame {
+  width: min(92vw, 1400px);
+  height: min(86vh, 1000px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 18px;
+  /* 进入特效：中心圆展开 + 模糊转清晰 */
+  animation: zoomFrameIn .55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-shadow: 0 40px 120px rgba(0, 0, 0, .7);
+}
+
+@keyframes zoomFrameIn {
+  0% {
+    opacity: 0;
+    clip-path: circle(0% at 50% 50%);
+    filter: blur(16px);
+    transform: scale(.92);
+  }
+  100% {
+    opacity: 1;
+    clip-path: circle(150% at 50% 50%);
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+
+.gallery-zoom-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+  border-radius: 14px;
+}
+
+/* 左右翻图按钮（全屏模式下） */
+.gallery-zoom-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .14);
+  color: #fff;
+  font-size: 26px;
+  z-index: 65;
+  transition: all .25s ease;
+  backdrop-filter: blur(8px);
+}
+
+.gallery-zoom-nav:hover {
+  background: var(--accent, #508cd6);
+  border-color: var(--accent, #508cd6);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.gallery-zoom-prev { left: 28px; }
+.gallery-zoom-next { right: 28px; }
+
+/* 页码计数器 */
+.gallery-zoom-counter {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, .7);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  background: rgba(0, 0, 0, .4);
+  padding: 5px 16px;
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  z-index: 61;
+  pointer-events: none;
+}
+
+/* ── 加载 / 空态 ── */
+.gallery-loading {
+  color: #d7d2c9;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  align-self: center;
+  flex: 1;
+  justify-content: center;
+}
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  border: 3px solid rgba(255, 255, 255, .2);
+  border-top-color: var(--accent, #508cd6);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ══════════════════════════════════
+   响应式
+   ══════════════════════════════════ */
+
+/* 平板：缩小间距与圆角（列数由 JS 控制） */
+@media (max-width: 1100px) {
+  .gallery-masonry {
+    gap: 11px;
+    padding: 68px 20px 36px;
+  }
+  .gallery-col { gap: 11px; }
+  .gallery-masonry-item { border-radius: 12px; }
+}
+
+/* 手机：2 列（列数由 JS 控制） */
+@media (max-width: 680px) {
+  .gallery-masonry {
+    gap: 9px;
+    padding: 64px 14px 28px;
+  }
+  .gallery-col { gap: 9px; }
+  .gallery-masonry-item { border-radius: 10px; }
+  .gallery-topbar { left: 16px; top: 16px; }
+  .gallery-cat { font-size: 15px; }
+  .gallery-counter { font-size: 11px; }
+  .gallery-close { width: 38px; height: 38px; top: 16px; right: 16px; font-size: 17px; }
+  .gallery-zoom-nav { width: 42px; height: 42px; font-size: 20px; }
+  .gallery-zoom-prev { left: 10px; }
+  .gallery-zoom-next { right: 10px; }
+}

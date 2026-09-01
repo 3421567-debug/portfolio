@@ -1,0 +1,709 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+  /* ═══ 全局 ═══ */
+  .el-main { padding: 20px; }
+  #content-main { max-width: none; width: 100%; }
+
+  /* ���══ 顶部操作栏 — 固定钉在顶部 ═══ */
+  /* Django 的 submit-row 在 SimpleUI 里通常作为顶部工具栏出现 */
+  .submit-row {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: linear-gradient(180deg, #ffffff, #f8f9fa);
+    border-bottom: 1px solid #e5e7eb;
+    border-radius: 10px 10px 0 0 !important;
+    padding: 12px 20px !important;
+    margin: 0 0 20px 0 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  /* 去掉「保存并继续编辑」「保存并增加另一个」按钮 — 覆盖 input + button */
+  .submit-row input[name="_continue"],
+  .submit-row input[name="_addanother"],
+  .submit-row button[name="_continue"],
+  .submit-row button[name="_addanother"],
+  .submit-row input[value*="继续编辑"],
+  .submit-row input[value*="增加另一个"],
+  .submit-row button[value*="继续编辑"],
+  .submit-row button[value*="增加另一个"] {
+    display: none !important;
+  }
+  /* 隐藏底部重复的 submit-row（只保留顶部第一个） */
+  .submit-row + .submit-row { display: none !important; }
+
+  /* ═══ 全局圆角统一美化 ═══ */
+  /* 输入框圆角 */
+  .vTextField,
+  textarea,
+  input[type="url"],
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  input[type="password"],
+  select {
+    border-radius: 6px !important;
+    max-width: 100%;
+    box-sizing: border-box;
+    border-color: #d1d5db;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .vTextField:focus,
+  textarea:focus,
+  input[type="url"]:focus,
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  input[type="number"]:focus,
+  select:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.15) !important;
+    outline: none;
+  }
+  /* 表单行 — 仅限主表单区域（不影响表格内 td） */
+  .module .aligned .form-row {
+    padding-top: 10px; padding-bottom: 10px;
+    border-radius: 6px;
+    display: flex;
+    align-items: flex-start;
+  }
+  .module .aligned .form-row > label {
+    font-size: 13.5px !important;
+    color: #374151 !important;
+    font-weight: 500;
+    min-width: 80px;
+    padding-top: 5px;
+    flex-shrink: 0;
+  }
+  .module .aligned .form-row > div {
+    flex: 1;
+    min-width: 0;
+  }
+  .form-row:hover {
+    background: rgba(248,250,252,0.6);
+  }
+
+  /* ═══ 文件上传区域（人物照片）排版对齐 ═══ */
+  .module .aligned .form-row .file-upload,
+  .module .aligned .form-row .clearable-file-input {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px !important;
+    line-height: 1.6;
+  }
+  /* "目前:" 行 — 当前文件 + 清除勾选 */
+  .module .aligned .form-row .clearable-file-input a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #2563eb;
+    text-decoration: none;
+    font-size: 13px;
+    padding: 2px 0;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .module .aligned .form-row .clearable-file-input a:hover {
+    background: #eff6ff;
+    text-decoration: underline;
+  }
+  .module .aligned .form-row .clearable-file-input label[for*="clear"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #6b7280;
+  }
+  .module .aligned .form-row .clearable-file-input label[for*="clear"]:hover {
+    color: #dc2626;
+  }
+  /* "修改:" 行 — 文件选择按钮 */
+  .module .aligned .form-row .file-upload span,
+  .module .aligned .form-row input[type="file"] {
+    font-size: 13px !important;
+  }
+  .module .aligned .form-row input[type="file"]::file-selector-button {
+    border-radius: 6px !important;
+    padding: 4px 12px;
+    font-size: 12.5px;
+    background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+    border: 1px solid #d1d5db;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .module .aligned .form-row input[type="file"]::file-selector-button:hover {
+    background: linear-gradient(180deg, #eef2f7, #e2e8f0);
+    border-color: #94a3b8;
+  }
+  /* 模块容器圆角 */
+  .module {
+    border-radius: 10px !important;
+    overflow: hidden;
+    border: 1px solid #e5e7eb !important;
+  }
+  .module caption,
+  .module h2 {
+    border-radius: 9px 9px 0 0 !important;
+  }
+  /* fieldset 圆角 + 标题美化 */
+  .module .aligned fieldset {
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    padding: 16px 20px;
+  }
+  .module .aligned fieldset h2 {
+    font-size: 14px !important;
+    color: #1f2937 !important;
+    background: linear-gradient(180deg, #f8fafc, #f1f5f9) !important;
+    margin: -16px -20px 14px -20px !important;
+    padding: 10px 18px !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    border-radius: 8px 8px 0 0 !important;
+    letter-spacing: 0.3px;
+  }
+  /* 保存按钮美化 */
+  .submit-row input[type="submit"],
+  .submit-row button {
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    padding: 8px 22px !important;
+    font-size: 13px !important;
+    transition: all 0.2s ease !important;
+    letter-spacing: 0.3px;
+  }
+  .submit-row input[type="submit"][name="_save"],
+  .submit-row input[type="submit"][value*="保存"] {
+    background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: 0 2px 6px rgba(37,99,235,0.25) !important;
+  }
+  .submit-row input[type="submit"][name="_save"]:hover,
+  .submit-row input[type="submit"][value*="保存"]:hover {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb) !important;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.35) !important;
+    transform: translateY(-1px);
+  }
+  /* 历史链接美化 */
+  .submit-row a.historylink {
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 13px;
+    margin-left: 16px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: all 0.15s;
+  }
+  .submit-row a.historylink:hover {
+    color: #3b82f6;
+    background: #eff6ff;
+  }
+
+  /* ═══ 内联表格容器（圆角 + 禁止横向溢出）═══ */
+  .inline-group {
+    border: 1px solid #d0d5dd;
+    border-radius: 10px;
+    margin-bottom: 24px;
+    overflow-x: hidden;          /* ← 禁止横向滚动 */
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .inline-group > h2,
+  .inline-group > .module.caption {
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e5e7eb;
+    margin: 0;
+    font-weight: 600;
+    font-size: 14px;
+    color: #374151;
+    border-radius: 10px 10px 0 0;
+  }
+
+  /* ═══ 表格布局 — 紧凑列宽，100%自适应容器 ═══ */
+  .inline-group .tabular {
+    width: 100%;
+  }
+  .inline-group .tabular table {
+    width: 100%;
+    table-layout: fixed;       /* ← 固定表格布局，均分宽度 */
+    border-collapse: collapse;
+  }
+  .inline-group .tabular thead th {
+    background: #f1f3f5;
+    font-weight: 600;
+    font-size: 13px;
+    color: #4a5568;
+    padding: 10px 6px;
+    border-bottom: 2px solid #cbd5e0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* 列宽分配 — 时间12% | 职位14% | 公司14% | 描述36% | 排序12% | 删除12% */
+  .inline-group .tabular thead th:nth-child(1) { width: 12%; }
+  .inline-group .tabular thead th:nth-child(2) { width: 14%; }
+  .inline-group .tabular thead th:nth-child(3) { width: 14%; }
+  .inline-group .tabular thead th:nth-child(4) { width: 36%; }
+  .inline-group .tabular thead th:nth-child(5) { width: 12%; }
+  .inline-group .tabular thead th:nth-child(6) { width: 12%; }
+  /* 表头圆角 — 左上 + 右上 */
+  .inline-group .tabular thead tr th:first-child {
+    border-radius: 9px 0 0 0 !important;
+  }
+  .inline-group .tabular thead tr th:last-child {
+    border-radius: 0 9px 0 0 !important;
+  }
+  .inline-group .tabular tbody td {
+    padding: 8px 5px;
+    vertical-align: middle;
+    border-bottom: 1px solid #edf2f7;
+  }
+  .inline-group .tabular tbody tr:last-child td:first-child {
+    border-radius: 0 0 0 9px !important;
+  }
+  .inline-group .tabular tbody tr:last-child td:last-child {
+    border-radius: 0 0 9px 0 !important;
+  }
+  .inline-group .tabular tbody tr:hover td { background: #fafbfc; }
+
+  /* ═══ 隐藏 original 列 ═══ */
+  .inline-group .tabular th.original,
+  .inline-group .tabular td.original,
+  .inline-group .tabular td.field-DELETE {
+    display: none !important;
+  }
+
+  /* ═══ 隐藏「删除？」表头文字，保留列宽 ═══ */
+  .inline-group .tabular thead tr th:last-child {
+    font-size: 0;
+    padding: 0 2px;
+  }
+
+
+
+  .inline-group .tabular textarea {
+    max-height: 60px; min-height: 32px;
+    resize: vertical; width: 100%;
+    box-sizing: border-box;
+    font-size: 13px;
+  }
+
+  /* ═══ 表格内输入框 — 自适应单元格宽度 ═══ */
+  .inline-group .tabular td input[type="text"],
+  .inline-group .tabular td input[type="number"],
+  .inline-group .tabular td select {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    font-size: 13px !important;
+    padding: 4px 6px !important;
+  }
+  .inline-group .tabular td.field-order {
+    white-space: nowrap;
+    text-align: center;
+    vertical-align: middle;
+  }
+  .inline-group .tabular td.field-order input[type="number"],
+  .inline-group .tabular td.field-order input[type="text"] {
+    width: 40px !important; text-align: center; font-size: 13px;
+    font-weight: 600; color: #555;
+    border: 1px solid #d1d5db; border-radius: 5px;
+    padding: 3px 2px !important; display: inline-block; vertical-align: middle;
+    box-sizing: border-box;
+  }
+
+  /* ── 拖拽手柄按钮 ── */
+  .drag-grip {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 28px; margin-left: 4px;
+    cursor: grab; user-select: none;
+    background: linear-gradient(180deg, #f8fafc, #eef2f7);
+    border: 1px solid #c9d1d9; border-radius: 5px;
+    color: #8b949e; font-size: 11px; line-height: 1;
+    letter-spacing: -1px; vertical-align: middle; flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .drag-grip:hover {
+    background: linear-gradient(180deg, #e8f0fe, #d4e3fc);
+    border-color: #a8c5fa; color: #2563eb;
+    box-shadow: 0 2px 5px rgba(37,99,235,0.15);
+  }
+  .drag-grip:active { cursor: grabbing; }
+  .drag-grip.is-dragging { opacity: 0.4; background: #dbeafe; border-color: #60a5fa; }
+
+  /* 行拖拽状态 */
+  tr.row-dragging { opacity: 0.2 !important; }
+  tr.row-drag-target { border-top: 2.5px solid #3b82f6 !important; }
+
+  /* ════════════════════════════════════════════════════════════
+     删除列 — 纯 CSS 控制外观，JS 只注入 <label>
+     原生 checkbox 用 CSS 类隐藏（不依赖 JS 行内样式）
+     → 新旧行视觉效果完全一致
+  ════════════════════════════════════════════════════════════ */
+  .inline-group .tabular td.delete {
+    text-align: center;
+    vertical-align: middle;
+    position: relative;
+    overflow: visible;         /* 允许 label 正常显示 */
+  }
+  /* 原生 checkbox：纯 CSS 视觉隐藏（铺满单元格但透明）*/
+  .inline-group .tabular td.delete input[type="checkbox"].del-cb-hidden {
+    position: absolute !important;
+    top: 0 !important; left: 0 !important;
+    width: 100% !important; height: 100% !important;
+    margin: 0 !important; padding: 0 !important;
+    opacity: 0 !important;
+    cursor: pointer !important;
+    z-index: 2;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+  }
+  /* label 按钮外观 — 所有行共用同一套样式 */
+  .inline-group .tabular td.delete label.del-label {
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    padding: 4px 10px;
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 0.5px;
+    color: #dc2626;
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    border: 1px solid #fca5a5;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;
+    z-index: 1;
+  }
+  .inline-group .tabular td.delete label.del-label:hover {
+    background: linear-gradient(135deg, #dc2626, #ef4444) !important;
+    color: #fff !important;
+    border-color: #dc2626 !important;
+    box-shadow: 0 2px 6px rgba(239,68,68,0.25);
+    transform: translateY(-1px);
+  }
+  .inline-group .tabular td.delete label.del-label.is-deleted {
+    color: #991b1b;
+    background: linear-gradient(135deg, #fca5a5, #fecaca) !important;
+    border-color: #f87171 !important;
+  }
+  .inline-group .tabular td.delete label.del-label.is-deleted:hover {
+    background: linear-gradient(135deg, #16a34a, #22c55e) !important;
+    color: #fff !important;
+    border-color: #16a34a !important;
+    box-shadow: 0 2px 6px rgba(34,197,94,0.25);
+  }
+
+  /* 整行标记为已删除的视觉反馈 */
+  tr.row-del-marked { background-color: #fef2f2 !important; }
+  tr.row-del-marked td { opacity: 0.45; }
+  tr.row-del-marked td.delete { opacity: 1; }
+  tr.row-del-marked td.field-order { opacity: 1; }
+
+  /* 隐藏 Django 底部默认删除链接 */
+  .submit-row a.deletelink { display: none !important; }
+
+  /* 添加行 */
+  .add-row td {
+    padding: 8px 14px; background: #f9fafb;
+    border-top: 1px dashed #d1d5db;
+  }
+  .add-row a { color: #3b82f6; font-weight: 500; }
+
+  /* ═══ Toast 提示 ═══ */
+  .save-toast {
+    position: fixed; top: 20px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 99999; padding: 12px 28px;
+    background: linear-gradient(135deg, #065f46, #059669);
+    color: #fff; font-size: 14px; font-weight: 600;
+    border-radius: 10px; box-shadow: 0 4px 20px rgba(5,150,105,0.35);
+    animation: toastIn 0.35s ease, toastOut 0.35s ease 2s forwards;
+    pointer-events: none; white-space: nowrap;
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+  @keyframes toastOut {
+    from { opacity: 1; transform: translateX(-50%) translateY(0); }
+    to   { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+  }
+</style>
+{% endblock %}
+
+{% block field_sets %}
+{{ block.super }}
+<script>
+(function() {
+  'use strict';
+
+  var $$ = function(sel, ctx) { return Array.from((ctx || document).querySelectorAll(sel)); };
+  var _dragging = false;
+
+  function getOrderInput(row) {
+    var o = row.querySelector('input[id$="-order"]');
+    if (!o) return null;
+    if (o.id.indexOf('__prefix__') !== -1) return null;
+    return o;
+  }
+
+  /* ═══ 1) 删除按钮：给每个 td.delete 注入 <label>（标准 for 绑定）═══ */
+  function enhanceDelete() {
+    $$('.inline-group .tabular td.delete').forEach(function(td) {
+      // 已有 label 则跳过（避免重复注入）
+      if (td.querySelector('label.del-label')) return;
+
+      var cb = td.querySelector('input[type="checkbox"]');
+      if (!cb) return;
+
+      // 确保 checkbox 有 id（label[for] 需要）
+      if (!cb.id || cb.id.indexOf('__prefix__') !== -1) {
+        cb.id = 'del_cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+      }
+
+      // 用 CSS 类隐藏 checkbox（不是行内样式！→ 新旧行效果一致）
+      cb.classList.add('del-cb-hidden');
+
+      // 创建 label 按钮
+      var label = document.createElement('label');
+      label.className = 'del-label';
+      label.setAttribute('for', cb.id);
+
+      // 同步状态函数
+      function sync() {
+        label.textContent = cb.checked ? '↩ 撤销' : '✕ 删除';
+        label.classList.toggle('is-deleted', cb.checked);
+        var tr = td.closest('tr');
+        if (tr) tr.classList.toggle('row-del-marked', cb.checked);
+      }
+      cb.addEventListener('change', sync);
+
+      td.appendChild(label);
+      sync();   // 初始化状态
+    });
+  }
+
+  /* ═══ 2) 拖拽手柄：注入到排序列 ═══ */
+  function enhanceRows() {
+    if (_dragging) return;
+    $$('.inline-group .tabular tbody').forEach(function(tbody) {
+      $$('tr', tbody).forEach(function(row) {
+        var orderInput = getOrderInput(row);
+        if (!orderInput) return;
+        var orderCell = row.querySelector('td.field-order');
+        if (!orderCell) return;
+        if (orderCell.querySelector('.drag-grip')) return;
+
+        var grip = document.createElement('span');
+        grip.className = 'drag-grip';
+        grip.innerHTML = '⋮⋮';
+        grip.title = '按住上下拖动排序';
+
+        var _ds = null;
+        grip.addEventListener('mousedown', function(e) {
+          if (e.button !== 0) return;
+          e.preventDefault();
+          var rect = row.getBoundingClientRect();
+          _ds = { startY: e.clientY, startTop: rect.top, clone: null };
+          _dragging = true;
+
+          var clone = row.cloneNode(true);
+          clone.style.position = 'fixed';
+          clone.style.left = rect.left + 'px';
+          clone.style.top = rect.top + 'px';
+          clone.style.width = rect.width + 'px';
+          clone.style.zIndex = '99998';
+          clone.style.opacity = '0.45';
+          clone.style.pointerEvents = 'none';
+          clone.style.boxShadow = '0 4px 20px rgba(0,0,0,0.15)';
+          clone.classList.add('row-dragging');
+          document.body.appendChild(clone);
+          _ds.clone = clone;
+
+          row.classList.add('row-dragging');
+          grip.classList.add('is-dragging');
+          document.body.style.cursor = 'grabbing';
+          document.body.style.userSelect = 'none';
+
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp);
+        });
+
+        var onMove = function(e) {
+          if (!_ds || !_ds.clone) return;
+          _ds.clone.style.top = (_ds.startTop + (e.clientY - _ds.startY)) + 'px';
+          var targetRow = findRowAtY(tbody, e.clientY);
+          $$('.inline-group .tabular tbody tr.row-drag-target').forEach(function(r) {
+            r.classList.remove('row-drag-target');
+          });
+          if (targetRow && targetRow !== row) targetRow.classList.add('row-drag-target');
+        };
+
+        var onUp = function(e) {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+          _dragging = false;
+
+          if (!_ds) return;
+          if (_ds.clone && _ds.clone.parentNode) _ds.clone.parentNode.removeChild(_ds.clone);
+          row.classList.remove('row-dragging');
+          grip.classList.remove('is-dragging');
+          $$('.inline-group .tabular tbody tr.row-drag-target').forEach(function(r) {
+            r.classList.remove('row-drag-target');
+          });
+
+          var targetRow = findRowAtY(tbody, e.clientY);
+          if (targetRow && targetRow !== row) {
+            var allRows = $$('tr', tbody).filter(function(r) { return !!getOrderInput(r); });
+            var thisIdx = allRows.indexOf(row);
+            var targetIdx = allRows.indexOf(targetRow);
+            if (thisIdx !== -1 && targetIdx !== -1) {
+              if (targetIdx < thisIdx) tbody.insertBefore(row, targetRow);
+              else tbody.insertBefore(row, targetRow.nextSibling);
+              reorderAll(tbody);
+            }
+          }
+          _ds = null;
+        };
+
+        if (orderInput.parentNode) {
+          orderInput.parentNode.insertBefore(grip, orderInput.nextSibling);
+        }
+      });
+    });
+  }
+
+  function enhanceAll() { enhanceDelete(); enhanceRows(); }
+
+  function findRowAtY(tbody, y) {
+    var rows = $$('tr', tbody).filter(function(r) { return !!getOrderInput(r); });
+    var best = null, bestDist = Infinity;
+    rows.forEach(function(row) {
+      if (row.classList.contains('row-dragging')) return;
+      var rect = row.getBoundingClientRect();
+      var mid = rect.top + rect.height / 2;
+      var dist = Math.abs(y - mid);
+      if (dist < bestDist) { bestDist = dist; best = row; }
+    });
+    return best;
+  }
+
+  function reorderAll(tbody) {
+    var rows = $$('tr', tbody).filter(function(r) { return !!getOrderInput(r); });
+    var n = rows.length;
+    rows.forEach(function(row, i) {
+      var inp = getOrderInput(row);
+      if (inp) inp.value = n - i;
+    });
+  }
+
+  /* ═══ 初始化 ═══ */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', enhanceAll);
+  } else {
+    setTimeout(enhanceAll, 50);
+  }
+
+  /* ═══ 移除多余按钮（SimpleUI 兼容）═══ */
+  function removeExtraButtons() {
+    var allRows = $$('.submit-row');
+    if (allRows.length === 0) return;
+    // 保留第一个（顶部）submit-row，隐藏其余（底部重复栏）
+    allRows.forEach(function(row, idx) {
+      if (idx > 0) { row.style.setProperty('display', 'none'); }
+    });
+    // 在保留的顶部栏里，只隐藏「继续编辑 / 增加另一个」，永远保留「保存(_save)」
+    var keep = allRows[0];
+    $$('input, button, a', keep).forEach(function(btn) {
+      var name = (btn.name || btn.getAttribute('name') || '').toLowerCase();
+      var val = (btn.value || btn.textContent || btn.innerText || '');
+      if (name === '_continue' || name === '_addanother' ||
+          val.indexOf('继续编辑') !== -1 ||
+          val.indexOf('增加另一个') !== -1) {
+        btn.style.setProperty('display', 'none');
+      }
+    });
+  }
+  // 立即执行 + 延迟兜底（等 SimpleUI 渲染完）
+  removeExtraButtons();
+  setTimeout(removeExtraButtons, 100);
+  setTimeout(removeExtraButtons, 400);
+  setTimeout(removeExtraButtons, 1200);
+
+  // MutationObserver：tbody 子节点变化时增强
+  var _observer = new MutationObserver(function() { setTimeout(enhanceAll, 80); });
+  $$('.inline-group .tabular tbody').forEach(function(tb) {
+    _observer.observe(tb, { childList: true, subtree: false });
+  });
+
+  // 兜底轮询：150ms
+  setInterval(enhanceAll, 150);
+
+  // 点击「添加另一个」后立即增强
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.add-row') || e.target.closest('a.addlink')) {
+      setTimeout(enhanceAll, 50);
+      setTimeout(enhanceAll, 200);
+    }
+  }, true);
+
+  /* ═══ 保存后停留本页 + Toast ═══ */
+  function showToast(msg) {
+    var existing = document.querySelector('.save-toast');
+    if (existing) existing.parentNode.removeChild(existing);
+    var el = document.createElement('div');
+    el.className = 'save-toast';
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(function() {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }, 2600);
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var form = document.querySelector('#content-main form') ||
+               document.querySelector('form[method="post"]');
+    if (!form) return;
+
+    form.addEventListener('submit', function(e) {
+      var submitter = e.submitter || document.activeElement;
+      var isSave = submitter &&
+        (submitter.name === '_save' ||
+         (submitter.value && submitter.value.indexOf('保存') !== -1) ||
+         (submitter.id && submitter.id.indexOf('save') !== -1));
+
+      if (isSave) {
+        e.preventDefault();
+        var fd = new FormData(form);
+        fd.append('_save', '保存');
+        fetch(form.action, {
+          method: 'POST',
+          body: fd,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function(res) {
+          if (res.redirected || res.status === 302 || res.status === 200) {
+            showToast('✅ 修改已保存成功！');
+            /* 停留在本页，不跳转 */
+          } else {
+            showToast('⚠️ 保存出现问题，请检查输入');
+          }
+        }).catch(function() {
+          form.submit();
+        });
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,180 @@
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;   /* 统一背景由全局 .app-background 提供 */
+}
+
+.hero-aurora {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  opacity: 0.9;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at center, rgba(2,6,23,0.05) 0%, rgba(2,6,23,0.25) 60%, rgba(2,6,23,0.5) 100%);
+  z-index: 2;
+}
+
+.hero-video-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background-color: transparent;
+  overflow: hidden;
+}
+
+/* 后台配置的背景图片 / 视频（位于极光之下） */
+.hero-bg-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  padding: 0 40px;
+  pointer-events: none;   /* 文字不拦截鼠标，让图标整块区域可悬停放大；倾斜由 hero 段统一驱动 */
+}
+
+.hero-tilt {
+  display: inline-block;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.hero-title {
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Source Han Sans CN', 'Microsoft YaHei', sans-serif;
+  font-size: clamp(64px, 12vw, 168px);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  line-height: 1.3;
+  padding-bottom: 0.1em;
+  color: #e8eef8;   /* 兜底色：GradientText 未加载时标题仍可见 */
+  text-shadow: 0 0 60px rgba(0, 0, 0, 0.4);
+  margin: 0;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.4s forwards;
+  transform: scaleX(1.1);
+  transform-origin: center;
+}
+
+.hero-title + .hero-title {
+  margin-top: 0.1em;
+}
+
+/* 首页标题使用 GradientText 流动渐变：去除组件默认的圆角/毛玻璃/裁剪/指针，保留居中 */
+.hero-title .animated-gradient-text {
+  border-radius: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  overflow: visible;
+  cursor: inherit;
+  margin: 0 auto;
+}
+/* 防止 background-clip:text 裁掉 g / y 等字母的下伸部 */
+.hero-gradient .text-content {
+  padding-bottom: 0.14em;
+  line-height: 1.3;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: scaleX(1.1) translateY(40px); }
+  to { opacity: 1; transform: scaleX(1.1) translateY(0); }
+}
+
+.hero-scroll {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  animation: fadeUpScroll 0.8s ease 0.8s forwards;
+}
+
+@keyframes fadeUpScroll {
+  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.scroll-text {
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.scroll-line {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(180deg, var(--accent), transparent);
+  animation: scrollPulse 2s ease-in-out infinite;
+}
+
+@keyframes scrollPulse {
+  0%, 100% { opacity: 0.3; height: 40px; }
+  50% { opacity: 1; height: 60px; }
+}
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 56px;
+    letter-spacing: 0.03em;
+    line-height: 1.3;
+    padding-bottom: 0.1em;
+    transform: scaleX(1.06);
+  }
+}
+
+[data-theme="light"] .hero {
+  background: transparent;
+}
+
+[data-theme="light"] .hero-aurora {
+  opacity: 0.5;
+}
+
+[data-theme="light"] .hero-overlay {
+  background: radial-gradient(ellipse at center, rgba(232,236,242,0.05) 0%, rgba(232,236,242,0.35) 60%, rgba(232,236,242,0.65) 100%);
+}
+
+[data-theme="light"] .hero-video-placeholder {
+  background-color: transparent;
+  background-image: none;
+}
+
+[data-theme="light"] .hero-title {
+  background: linear-gradient(90deg, #93c5fd 0%, #60a5fa 30%, #3b82f6 70%, #2563eb 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+}

@@ -1,0 +1,535 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>首页管理</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: #0a0a0f; color: #f0f0f5; padding: 32px; max-width: 1200px; margin: 0 auto;
+    }
+    h1 { font-size: 22px; margin-bottom: 6px; }
+    .hint { color: #8888a0; font-size: 13px; margin-bottom: 18px; }
+    .toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; position: sticky; top: 0; background: #0a0a0f; padding: 12px 0; z-index: 50; border-bottom: 1px solid rgba(255,255,255,.06); }
+    button { border: none; border-radius: 10px; padding: 10px 22px; font-size: 14px; cursor: pointer; font-weight: 600; }
+    .btn-save { background: #3b82f6; color: #fff; }
+    .btn-save:disabled { opacity: .5; cursor: default; }
+    .btn-reset { background: rgba(255,255,255,.1); color: #f0f0f5; }
+    #status { font-size: 13px; color: #34d399; min-height: 18px; }
+
+    .card {
+      background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px; padding: 20px; margin-bottom: 20px;
+    }
+    .card h2 { font-size: 15px; margin-bottom: 14px; color: #cdd2e0; display: flex; align-items: center; gap: 8px; }
+    .card h2 .num { background: #3b82f6; color: #fff; border-radius: 6px; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
+    .sub { font-size: 13px; color: #9aa0b5; margin: 14px 0 8px; display: flex; align-items: center; gap: 8px; }
+    .sub .tag { background: rgba(59,130,246,.15); color: #60a5fa; border-radius: 6px; padding: 2px 8px; font-size: 11px; }
+
+    .row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 12px; color: #9aa0b5; }
+    input[type=text], input[type=number], select {
+      background: #14141c; border: 1px solid rgba(255,255,255,.12); color: #f0f0f5;
+      border-radius: 8px; padding: 9px 12px; font-size: 14px; min-width: 180px;
+    }
+    input[type=text]:focus, input[type=number]:focus, select:focus { outline: none; border-color: #3b82f6; }
+    .radio-group { display: flex; gap: 10px; }
+    .radio-group label { display: flex; align-items: center; gap: 6px; background: #14141c; border: 1px solid rgba(255,255,255,.12); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+    .radio-group input { accent-color: #3b82f6; }
+
+    .preview-box {
+      margin-top: 14px; width: 100%; max-width: 420px; aspect-ratio: 16/9;
+      border-radius: 10px; overflow: hidden; background: #05060f;
+      border: 1px solid rgba(255,255,255,.1); position: relative;
+    }
+    .preview-box img, .preview-box video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .preview-box .empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #9fb4d8; font-size: 13px; text-align: center; }
+    /* 极光动态预览（背景=无 时） */
+    .aurora-demo {
+      position: absolute; inset: 0;
+      background: linear-gradient(120deg, #0b1e4d, #2563eb, #22d3ee, #2563eb, #0b1e4d);
+      background-size: 300% 300%;
+      animation: auroraShift 7s ease infinite;
+      border-radius: 10px;
+    }
+    @keyframes auroraShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+    .grad-preview {
+      margin-top: 12px; padding: 16px; border-radius: 10px; background: #05060f;
+      font-size: 34px; font-weight: 800; text-align: center; letter-spacing: 2px;
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .grad-raw { margin-top: 10px; width: 100%; font-family: monospace; font-size: 12px; color: #9aa0b5; }
+
+    /* 仿首屏舞台（图标部分）—— 用 scale 精确复刻首页 100vw×100vh hero，所见即所得 */
+    .stage-viewport {
+      position: relative; width: 100%; height: min(72vh, 780px);
+      border-radius: 14px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    .stage {
+      position: absolute; top: 0; left: 0;
+      width: 100vw; height: 100vh;   /* JS 覆盖为精确像素值，与首页 hero 一致 */
+      border-radius: 14px; overflow: hidden;
+      background: radial-gradient(ellipse at center, #0e1530 0%, #070a16 70%, #05060f 100%);
+      user-select: none; container-type: size;
+      transform-origin: top left;   /* 由 JS 设 scale 适配卡片显示区 */
+    }
+    /* 标题参考：与首页真实标题完全一致的样式，作为图标定位参照（z-index=3 同首页标题层级） */
+    .stage-title-ref {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scaleX(1.1);
+      text-align: center; pointer-events: none; z-index: 3; opacity: 0.92;
+      font-weight: 500; line-height: 1.3; letter-spacing: 0.05em; white-space: nowrap;
+      text-shadow: 0 0 60px rgba(0,0,0,0.4);
+      background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .stage-title-ref .ln { display: block; }
+    .stage-title-ref .ln + .ln { margin-top: 0.1em; }
+
+    .editor-icon {
+      position: absolute; transform: translate(-50%, -50%) rotate(var(--rot, 0deg));
+      cursor: grab; touch-action: none;
+      filter: drop-shadow(0 12px 32px rgba(0,0,0,.4)); border-radius: 14px; transition: box-shadow .2s;
+    }
+    .editor-icon.dragging { cursor: grabbing; box-shadow: 0 0 0 2px #3b82f6, 0 12px 32px rgba(0,0,0,.5); }
+    .editor-icon img { width: 100%; height: 100%; display: block; pointer-events: none; border-radius: 14px; }
+    /* PS 式选中框 */
+    .sel-box { position: absolute; inset: 0; border: 1px solid #3b82f6; display: none; pointer-events: none; border-radius: 4px; }
+    .editor-icon.selected .sel-box { display: block; }
+    .handle { position: absolute; width: 12px; height: 12px; background: #3b82f6; border: 2px solid #fff; border-radius: 2px; pointer-events: auto; }
+    .handle.tl { left: -7px; top: -7px; cursor: nwse-resize; }
+    .handle.tr { right: -7px; top: -7px; cursor: nesw-resize; }
+    .handle.bl { left: -7px; bottom: -7px; cursor: nesw-resize; }
+    .handle.br { right: -7px; bottom: -7px; cursor: nwse-resize; }
+    .rot-handle { position: absolute; top: -36px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; background: #fbbf24; border: 2px solid #fff; border-radius: 50%; pointer-events: auto; cursor: grab; }
+    .rot-handle::before { content: ''; position: absolute; top: 14px; left: 50%; width: 2px; height: 22px; background: #fbbf24; transform: translateX(-50%); }
+    .icon-panel { position: absolute; bottom: 8px; left: 8px; right: 8px; display: flex; gap: 8px; flex-wrap: wrap; pointer-events: none; }
+    .icon-panel .tag { pointer-events: auto; background: rgba(0,0,0,.55); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,.12); border-radius: 8px; padding: 5px 8px; font-size: 11px; color: #cdd2e0; display: flex; align-items: center; gap: 6px; }
+    .icon-panel label.replace { cursor: pointer; color: #60a5fa; text-decoration: underline; }
+    .icon-panel input[type=file] { display: none; }
+    .hidden { display: none !important; }
+    .stage-tip { text-align: center; color: #6b7390; font-size: 12px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>首页管理</h1>
+  <p class="hint">在这里统一管理首页的 <b>背景</b>、<b>标题</b> 与 <b>图标</b>。改完点右上角「保存」即同步到网站首页。</p>
+
+  <div class="toolbar">
+    <button class="btn-save" id="saveBtn">保存</button>
+    <button class="btn-reset" id="resetBtn">重置（放弃未保存改动）</button>
+    <span id="status"></span>
+  </div>
+
+  <!-- ① 背景 -->
+  <div class="card">
+    <h2><span class="num">1</span> 主页背景</h2>
+    <div class="radio-group" id="bgTypeGroup">
+      <label><input type="radio" name="bg_type" value="none"> 无</label>
+      <label><input type="radio" name="bg_type" value="image"> 图片</label>
+      <label><input type="radio" name="bg_type" value="video"> 视频</label>
+    </div>
+
+    <div class="row" id="bgImageFields" style="margin-top:14px;">
+      <div class="field">
+        <label>背景图片（jpg / png / webp）</label>
+        <input type="file" id="bgImageFile" accept="image/*">
+      </div>
+    </div>
+    <div class="row hidden" id="bgVideoFields" style="margin-top:14px;">
+      <div class="field">
+        <label>背景视频（mp4 / webm，建议 &lt; 10MB）</label>
+        <input type="file" id="bgVideoFile" accept="video/*">
+      </div>
+      <div class="field">
+        <label>视频封面图（可选）</label>
+        <input type="file" id="bgPosterFile" accept="image/*">
+      </div>
+    </div>
+
+    <div class="preview-box" id="bgPreview"></div>
+  </div>
+
+  <!-- ② 标题 -->
+  <div class="card">
+    <h2><span class="num">2</span> 首页标题</h2>
+    <div class="row">
+      <div class="field">
+        <label>标题第一行</label>
+        <input type="text" id="titleLine1" maxlength="50">
+      </div>
+      <div class="field">
+        <label>标题第二行</label>
+        <input type="text" id="titleLine2" maxlength="50">
+      </div>
+      <div class="field">
+        <label>最大字号 (px)</label>
+        <input type="number" id="titleSize" min="40" max="320" step="2">
+      </div>
+      <div class="field">
+        <label>字体</label>
+        <select id="titleFont"></select>
+      </div>
+    </div>
+
+    <div class="sub"><span class="tag">浅色页面</span> 标题文字颜色渐变</div>
+    <div class="row" style="align-items:center;">
+      <input type="color" id="gradC1-light" value="#93c5fd">
+      <input type="color" id="gradC2-light" value="#60a5fa">
+      <input type="color" id="gradC3-light" value="#2563eb">
+      <div class="field" style="margin-left:8px;">
+        <label>角度</label>
+        <input type="number" id="gradAngle-light" min="0" max="360" value="90" style="width:90px;">
+      </div>
+    </div>
+    <div class="grad-preview" id="gradPreview-light">Design Portfolio</div>
+    <input type="text" id="gradRaw-light" class="grad-raw">
+
+    <div class="sub"><span class="tag">深色页面</span> 标题文字颜色渐变</div>
+    <div class="row" style="align-items:center;">
+      <input type="color" id="gradC1-dark" value="#ffffff">
+      <input type="color" id="gradC2-dark" value="#a8c0e0">
+      <input type="color" id="gradC3-dark" value="#5a8ec8">
+      <div class="field" style="margin-left:8px;">
+        <label>角度</label>
+        <input type="number" id="gradAngle-dark" min="0" max="360" value="90" style="width:90px;">
+      </div>
+    </div>
+    <div class="grad-preview" id="gradPreview-dark">Design Portfolio</div>
+    <input type="text" id="gradRaw-dark" class="grad-raw">
+  </div>
+
+  <!-- ③ 图标 -->
+  <div class="card">
+    <h2><span class="num">3</span> 首页图标（点击选中后可出现操作框，拖动移动 / 拖角缩放 / 拖黄点旋转）</h2>
+    <div class="stage-viewport" id="stageViewport">
+      <div class="stage" id="stage">
+        <div class="stage-title-ref" id="stageTitleRef">
+          <span class="ln" id="refLine1"></span>
+          <span class="ln" id="refLine2"></span>
+        </div>
+      </div>
+    </div>
+    <p class="stage-tip">舞台正中显示的大字即首页真实标题（样式、字号、渐变与首页一致），z 层级也与首页相同——可据此把图标摆在标题前后/四周，所见即所得。</p>
+  </div>
+
+  {{ icons_json }}
+  {{ config_json }}
+  {{ font_choices }}
+
+  <script>
+    const CONFIG = JSON.parse(document.getElementById('hero-config-data').textContent);
+    const ICONS = JSON.parse(document.getElementById('hero-icons-data').textContent);
+    const FONT_CHOICES = JSON.parse(document.getElementById('font-choices-data').textContent);
+    const csrfToken = '{{ csrf_token }}';
+
+    const statusEl = document.getElementById('status');
+    const saveBtn = document.getElementById('saveBtn');
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+    function setStatus(msg, color) {
+      statusEl.textContent = msg;
+      statusEl.style.color = color || '#34d399';
+    }
+    function csrfHeaders() {
+      return { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' };
+    }
+
+    // ── 状态 ──
+    const config = { ...CONFIG };
+    const state = ICONS.map(i => ({ ...i }));
+    let bgDirty = false, bgFile = null, bgVideoFile = null, bgPosterFile = null;
+    let selectedKey = null;
+
+    // ───────── 背景 ─────────
+    const bgTypeGroup = document.getElementById('bgTypeGroup');
+    const bgImageFields = document.getElementById('bgImageFields');
+    const bgVideoFields = document.getElementById('bgVideoFields');
+    const bgPreview = document.getElementById('bgPreview');
+
+    function renderBgPreview() {
+      let html = '';
+      if (config.bg_type === 'image' && (config.bg_image || bgFile)) {
+        const src = bgFile ? URL.createObjectURL(bgFile) : config.bg_image;
+        html = `<img src="${src}" alt="背景图片">`;
+      } else if (config.bg_type === 'video' && (config.bg_video || bgVideoFile)) {
+        const src = bgVideoFile ? URL.createObjectURL(bgVideoFile) : config.bg_video;
+        const poster = bgPosterFile ? URL.createObjectURL(bgPosterFile) : config.bg_video_poster;
+        html = `<video src="${src}" poster="${poster || ''}" autoplay muted loop playsinline></video>`;
+      } else if (config.bg_type === 'none') {
+        html = `<div class="aurora-demo"></div><div class="empty">当前：仅极光动态背景</div>`;
+      }
+      bgPreview.innerHTML = html;
+    }
+    function syncBgFields() {
+      bgTypeGroup.querySelectorAll('input').forEach(r => r.checked = (r.value === config.bg_type));
+      bgImageFields.classList.toggle('hidden', config.bg_type !== 'image');
+      bgVideoFields.classList.toggle('hidden', config.bg_type !== 'video');
+      renderBgPreview();
+    }
+    bgTypeGroup.addEventListener('change', e => {
+      config.bg_type = e.target.value; bgDirty = true; syncBgFields();
+    });
+    document.getElementById('bgImageFile').addEventListener('change', e => { bgFile = e.target.files[0]; bgDirty = true; renderBgPreview(); });
+    document.getElementById('bgVideoFile').addEventListener('change', e => { bgVideoFile = e.target.files[0]; bgDirty = true; renderBgPreview(); });
+    document.getElementById('bgPosterFile').addEventListener('change', e => { bgPosterFile = e.target.files[0]; bgDirty = true; renderBgPreview(); });
+
+    // ───────── 标题 ─────────
+    const titleLine1 = document.getElementById('titleLine1');
+    const titleLine2 = document.getElementById('titleLine2');
+    const titleSize = document.getElementById('titleSize');
+    const titleFont = document.getElementById('titleFont');
+    const stageTitleRef = document.getElementById('stageTitleRef');
+
+    FONT_CHOICES.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.value; opt.textContent = f.label; titleFont.appendChild(opt);
+    });
+
+    function updatePreviewTexts() {
+      const t = (config.title_line1 || '') + ' ' + (config.title_line2 || '');
+      document.querySelectorAll('.grad-preview').forEach(p => p.textContent = t);
+      document.getElementById('refLine1').textContent = config.title_line1;
+      document.getElementById('refLine2').textContent = config.title_line2;
+    }
+    function syncTitleRef() {
+      stageTitleRef.style.fontFamily = config.title_font_family || '';
+      // 用容器查询单位 cqw 随舞台宽度等比缩放，与首页标题用 vw 的行为一致
+      stageTitleRef.style.fontSize = 'clamp(56px, 11cqw, ' + (config.title_size || 168) + 'px)';
+      // 舞台为深色背景，参考标题采用深色主题渐变，最贴近首页深色观感
+      const grad = config.title_gradient_dark || config.title_gradient || 'linear-gradient(90deg, #ffffff 0%, #e8eef8 20%, #a8c0e0 55%, #5a8ec8 100%)';
+      stageTitleRef.style.background = grad;
+      stageTitleRef.style.webkitBackgroundClip = 'text';
+      stageTitleRef.style.backgroundClip = 'text';
+      stageTitleRef.style.webkitTextFillColor = 'transparent';
+      updatePreviewTexts();
+    }
+
+    // 绑定一套渐变编辑器（浅色 / 深色）
+    function bindGradient(suffix, cfgKey) {
+      const c1 = document.getElementById('gradC1-' + suffix);
+      const c2 = document.getElementById('gradC2-' + suffix);
+      const c3 = document.getElementById('gradC3-' + suffix);
+      const ang = document.getElementById('gradAngle-' + suffix);
+      const raw = document.getElementById('gradRaw-' + suffix);
+      const prev = document.getElementById('gradPreview-' + suffix);
+      const build = () => `linear-gradient(${ang.value}deg, ${c1.value} 0%, ${c2.value} 50%, ${c3.value} 100%)`;
+      function sync() {
+        const g = config[cfgKey] || '';
+        const m = g.match(/linear-gradient\(([\d.]+)deg,\s*(#[0-9a-fA-F]{3,8})\s+\d+%,\s*(#[0-9a-fA-F]{3,8})\s+\d+%,\s*(#[0-9a-fA-F]{3,8})/);
+        if (m) { ang.value = Math.round(parseFloat(m[1])); c1.value = m[2]; c2.value = m[3]; c3.value = m[4]; }
+        raw.value = g; prev.style.background = g || 'none';
+      }
+      [c1, c2, c3, ang].forEach(el => el.addEventListener('input', () => {
+        const g = build(); config[cfgKey] = g; raw.value = g; prev.style.background = g;
+      }));
+      raw.addEventListener('input', () => { config[cfgKey] = raw.value; prev.style.background = raw.value; });
+      return { sync };
+    }
+    const gradLight = bindGradient('light', 'title_gradient_light');
+    const gradDark = bindGradient('dark', 'title_gradient_dark');
+
+    function syncTitleUI() {
+      titleLine1.value = config.title_line1;
+      titleLine2.value = config.title_line2;
+      titleSize.value = config.title_size;
+      titleFont.value = config.title_font_family;
+      gradLight.sync();
+      gradDark.sync();
+      syncTitleRef();
+    }
+    function onTitleChange() {
+      config.title_line1 = titleLine1.value;
+      config.title_line2 = titleLine2.value;
+      config.title_size = parseInt(titleSize.value, 10) || 168;
+      config.title_font_family = titleFont.value;
+      syncTitleRef();
+    }
+    [titleLine1, titleLine2, titleSize, titleFont].forEach(el => el.addEventListener('input', onTitleChange));
+
+    // ───────── 图标（拖拽 + PS 式选中框） ─────────
+    const stage = document.getElementById('stage');
+    const stageViewport = document.getElementById('stageViewport');
+    // 舞台 = 精确复刻首页 hero（100vw×100vh）后用 scale 缩放进卡片显示区。
+    // 这样舞台内部坐标、标题字号(cqw≈vw)、图标像素宽全部与首页 1:1，达到 WYSIWYG。
+    function fitStage() {
+      const vpW = window.innerWidth, vpH = window.innerHeight;
+      const boxW = stageViewport.clientWidth, boxH = stageViewport.clientHeight;
+      stage.style.width = vpW + 'px';
+      stage.style.height = vpH + 'px';
+      const scale = Math.min(boxW / vpW, boxH / vpH);
+      stage.style.transform = 'scale(' + scale + ')';
+    }
+    fitStage();
+    window.addEventListener('resize', fitStage);
+    selectedKey = null;
+
+    function renderIcons() {
+      stage.querySelectorAll('.editor-icon').forEach(n => n.remove());
+      state.forEach(icon => {
+        const el = document.createElement('div');
+        el.className = 'editor-icon' + (icon.key === selectedKey ? ' selected' : '');
+        el.dataset.key = icon.key;
+        el.style.left = icon.pos_x + '%';
+        el.style.top = icon.pos_y + '%';
+        el.style.width = icon.width + 'px';
+        el.style.zIndex = icon.z_index;
+        el.style.setProperty('--rot', (icon.rotation || 0) + 'deg');
+        el.innerHTML = `
+          <img src="${icon.image}" alt="${icon.label}">
+          <div class="sel-box">
+            <span class="handle tl"></span><span class="handle tr"></span>
+            <span class="handle bl"></span><span class="handle br"></span>
+            <span class="rot-handle"></span>
+          </div>
+          <div class="icon-panel"><span class="tag">${icon.label}
+            <label class="replace">替换图片<input type="file" accept="image/*" data-key="${icon.key}"></label>
+          </span></div>`;
+        stage.appendChild(el);
+        attachInteractions(el, icon);
+        el.querySelector('input[type=file]').addEventListener('change', e => onFilePicked(e, icon));
+      });
+    }
+
+    function attachInteractions(el, icon) {
+      // 选中 + 移动
+      el.addEventListener('pointerdown', e => {
+        if (e.target.closest('.handle') || e.target.closest('.rot-handle')) return;
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL') return;
+        selectIcon(icon.key);
+        startMove(e, el, icon);
+      });
+      // 缩放（右下角）
+      el.querySelector('.handle.br').addEventListener('pointerdown', e => {
+        e.stopPropagation(); e.preventDefault(); selectIcon(icon.key);
+        startResize(e, el, icon);
+      });
+      // 旋转（黄点）
+      el.querySelector('.rot-handle').addEventListener('pointerdown', e => {
+        e.stopPropagation(); e.preventDefault(); selectIcon(icon.key);
+        startRotate(e, el, icon);
+      });
+    }
+    function selectIcon(key) {
+      selectedKey = key;
+      stage.querySelectorAll('.editor-icon').forEach(n => n.classList.toggle('selected', n.dataset.key === key));
+    }
+    function startMove(e, el, icon) {
+      const startX = e.clientX, startY = e.clientY, sl = icon.pos_x, st = icon.pos_y;
+      el.setPointerCapture(e.pointerId); el.classList.add('dragging');
+      const mv = ev => {
+        const rect = stage.getBoundingClientRect();
+        icon.pos_x = clamp(sl + (ev.clientX - startX) / rect.width * 100, 0, 100);
+        icon.pos_y = clamp(st + (ev.clientY - startY) / rect.height * 100, 0, 100);
+        el.style.left = icon.pos_x + '%'; el.style.top = icon.pos_y + '%';
+      };
+      const up = () => { el.classList.remove('dragging'); el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); };
+      el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up);
+    }
+    function startResize(e, el, icon) {
+      const startX = e.clientX, sw = icon.width;
+      el.setPointerCapture(e.pointerId);
+      const mv = ev => {
+        let newW = clamp(sw + (ev.clientX - startX) * 2, 40, 600);
+        icon.width = newW; el.style.width = newW + 'px';
+      };
+      const up = () => { el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); };
+      el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up);
+    }
+    function startRotate(e, el, icon) {
+      const rect = stage.getBoundingClientRect();
+      const cx = rect.left + rect.width * (icon.pos_x / 100);
+      const cy = rect.top + rect.height * (icon.pos_y / 100);
+      el.setPointerCapture(e.pointerId);
+      const mv = ev => {
+        const ang = Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI;
+        icon.rotation = Math.round(ang + 90);
+        el.style.setProperty('--rot', icon.rotation + 'deg');
+      };
+      const up = () => { el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); };
+      el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up);
+    }
+    function onFilePicked(e, icon) {
+      const file = e.target.files[0]; if (!file) return;
+      icon._file = file;
+      const reader = new FileReader();
+      reader.onload = ev => { const img = e.target.closest('.editor-icon').querySelector('img'); if (img) img.src = ev.target.result; };
+      reader.readAsDataURL(file);
+      setStatus(`已选择「${icon.label}」的新图片，点保存生效`, '#fbbf24');
+    }
+    // 点击空白处取消选中
+    stage.addEventListener('pointerdown', e => {
+      if (e.target === stage || e.target === stageTitleRef || e.target.closest('.stage-title-ref')) {
+        selectedKey = null;
+        stage.querySelectorAll('.editor-icon').forEach(n => n.classList.remove('selected'));
+      }
+    });
+
+    // ───────── 保存 ─────────
+    async function save() {
+      saveBtn.disabled = true;
+      try {
+        // 1) 背景
+        if (bgDirty) {
+          const fd = new FormData();
+          fd.append('bg_type', config.bg_type);
+          if (bgFile) fd.append('bg_image', bgFile);
+          if (bgVideoFile) fd.append('bg_video', bgVideoFile);
+          if (bgPosterFile) fd.append('bg_video_poster', bgPosterFile);
+          const res = await fetch('/api/hero-config/background/', { method: 'POST', headers: csrfHeaders(), body: fd, credentials: 'same-origin' });
+          if (!res.ok) throw new Error('保存背景失败');
+          const data = await res.json();
+          config.bg_image = data.bg_image || ''; config.bg_video = data.bg_video || ''; config.bg_video_poster = data.bg_video_poster || '';
+          bgFile = bgVideoFile = bgPosterFile = null; bgDirty = false; syncBgFields();
+        }
+        // 2) 标题（含浅色/深色渐变）
+        const tRes = await fetch('/api/hero-config/save/', {
+          method: 'POST', headers: { ...csrfHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title_line1: config.title_line1, title_line2: config.title_line2,
+            title_size: config.title_size, title_font_family: config.title_font_family,
+            title_gradient: config.title_gradient || '',
+            title_gradient_light: config.title_gradient_light || '',
+            title_gradient_dark: config.title_gradient_dark || '',
+          }), credentials: 'same-origin',
+        });
+        if (!tRes.ok) throw new Error('保存标题失败');
+
+        // 3) 图标（含旋转）
+        for (const icon of state) {
+          if (icon._file) {
+            const fd = new FormData(); fd.append('image', icon._file);
+            const res = await fetch(`/api/hero-icons/${icon.key}/image/`, { method: 'POST', headers: csrfHeaders(), body: fd, credentials: 'same-origin' });
+            if (!res.ok) throw new Error(`上传「${icon.label}」失败`);
+            const data = await res.json(); icon.image = data.image; icon._file = null;
+          }
+        }
+        const payload = { icons: state.map(i => ({
+          key: i.key, pos_x: +i.pos_x.toFixed(2), pos_y: +i.pos_y.toFixed(2),
+          width: i.width, rotation: +(i.rotation || 0).toFixed(2), z_index: i.z_index
+        })) };
+        const res = await fetch('/api/hero-icons/save/', { method: 'POST', headers: { ...csrfHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify(payload), credentials: 'same-origin' });
+        if (!res.ok) throw new Error('保存图标失败');
+
+        setStatus('✅ 已保存并同步到首页', '#34d399');
+      } catch (err) {
+        setStatus('❌ ' + err.message, '#f87171');
+      } finally {
+        saveBtn.disabled = false;
+      }
+    }
+
+    saveBtn.addEventListener('click', save);
+    document.getElementById('resetBtn').addEventListener('click', () => location.reload());
+
+    // 初始化
+    syncBgFields();
+    syncTitleUI();
+    renderIcons();
+  </script>
+</body>
+</html>

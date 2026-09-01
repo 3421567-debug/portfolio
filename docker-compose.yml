@@ -1,0 +1,20 @@
+services:
+  web:
+    build: .
+    # 宿主机 80 端口 → 容器 8000（标准 HTTP，访问无需带端口）
+    ports:
+      - "80:8000"
+    environment:
+      # 务必替换为随机强密钥：python -c "import secrets;print(secrets.token_urlsafe(50))"
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-change-me-to-a-random-secret}
+      - DJANGO_DEBUG=False
+      # 换成你的 ECS 公网 IP 或域名（逗号分隔）
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      # 可选：把数据库放到挂载卷持久化（不挂则数据存在容器内，重建镜像会重置）
+      # - DB_PATH=/app/data/db.sqlite3
+    volumes:
+      # 作品图片持久化（后台上传的图片不会因重建容器丢失）
+      - ./media:/app/media
+      # 可选：数据库持久化（启用上面的 DB_PATH 后取消注释）
+      # - ./data:/app/data
+    restart: unless-stopped

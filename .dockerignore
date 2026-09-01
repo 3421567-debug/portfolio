@@ -1,0 +1,11 @@
+# 构建上下文里不需要送进镜像的内容
+venv/
+frontend/node_modules/
+staticfiles/
+__pycache__/
+*.pyc
+.workbuddy/
+.git/
+.env
+*.log
+backend.log

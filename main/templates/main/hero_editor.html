@@ -1,0 +1,224 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>首页图标排版编辑器</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: #0a0a0f; color: #f0f0f5; padding: 32px;
+    }
+    h1 { font-size: 20px; margin-bottom: 6px; }
+    .hint { color: #8888a0; font-size: 13px; margin-bottom: 20px; }
+    .toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+    button {
+      border: none; border-radius: 10px; padding: 10px 20px; font-size: 14px;
+      cursor: pointer; font-weight: 600;
+    }
+    .btn-save { background: #3b82f6; color: #fff; }
+    .btn-save:disabled { opacity: .5; cursor: default; }
+    .btn-reset { background: rgba(255,255,255,.1); color: #f0f0f5; }
+    #status { font-size: 13px; color: #34d399; min-height: 18px; }
+
+    /* 仿首屏舞台 */
+    .stage {
+      position: relative;
+      width: 100%;
+      max-width: 1100px;
+      aspect-ratio: 16 / 9;
+      margin: 0 auto;
+      border-radius: 16px;
+      overflow: hidden;
+      background: radial-gradient(ellipse at center, #0e1530 0%, #070a16 70%, #05060f 100%);
+      border: 1px solid rgba(255,255,255,.08);
+      user-select: none;
+    }
+    .stage::after {
+      content: "Design"; position: absolute; top: 38%; left: 50%;
+      transform: translate(-50%, -50%); font-size: 56px; font-weight: 800;
+      color: rgba(255,255,255,.10); letter-spacing: 4px; pointer-events: none;
+    }
+    .stage::before {
+      content: "Portfolio"; position: absolute; top: 56%; left: 50%;
+      transform: translate(-50%, -50%); font-size: 56px; font-weight: 800;
+      color: rgba(255,255,255,.10); letter-spacing: 4px; pointer-events: none;
+    }
+
+    .editor-icon {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      cursor: grab;
+      touch-action: none;
+      filter: drop-shadow(0 12px 32px rgba(0,0,0,.4));
+      border-radius: 14px;
+      transition: box-shadow .2s;
+    }
+    .editor-icon.dragging { cursor: grabbing; box-shadow: 0 0 0 2px #3b82f6, 0 12px 32px rgba(0,0,0,.5); }
+    .editor-icon img { width: 100%; height: 100%; display: block; pointer-events: none; border-radius: 14px; }
+
+    .icon-panel {
+      position: absolute; bottom: 8px; left: 8px; right: 8px;
+      display: flex; gap: 8px; flex-wrap: wrap; pointer-events: none;
+    }
+    .icon-panel .tag {
+      pointer-events: auto;
+      background: rgba(0,0,0,.55); backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,.12); border-radius: 8px;
+      padding: 5px 8px; font-size: 11px; color: #cdd2e0;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .icon-panel label.replace {
+      cursor: pointer; color: #60a5fa; text-decoration: underline;
+    }
+    .icon-panel input[type=file] { display: none; }
+  </style>
+</head>
+<body>
+  <h1>首页图标排版编辑器</h1>
+  <p class="hint">拖动图标调整位置，点「替换图片」上传新图标，完成后点「保存」。保存后立即同步到网站首页。</p>
+
+  <div class="toolbar">
+    <button class="btn-save" id="saveBtn">保存</button>
+    <button class="btn-reset" id="resetBtn">重置为已保存</button>
+    <span id="status"></span>
+  </div>
+
+  <div class="stage" id="stage"></div>
+
+  {{ icons_json }}
+
+  <script>
+    const ICONS = JSON.parse(document.getElementById('hero-icons-data').textContent);
+    const stage = document.getElementById('stage');
+    const statusEl = document.getElementById('status');
+    const saveBtn = document.getElementById('saveBtn');
+    const csrfToken = '{{ csrf_token }}';
+
+    const state = ICONS.map(i => ({ ...i }));
+
+    function render() {
+      stage.querySelectorAll('.editor-icon').forEach(n => n.remove());
+      state.forEach(icon => {
+        const el = document.createElement('div');
+        el.className = 'editor-icon';
+        el.dataset.key = icon.key;
+        el.style.left = icon.pos_x + '%';
+        el.style.top = icon.pos_y + '%';
+        el.style.width = icon.width + 'px';
+        el.style.zIndex = icon.z_index;
+        el.innerHTML = `<img src="${icon.image}" alt="${icon.label}">
+          <div class="icon-panel">
+            <span class="tag">${icon.label}
+              <label class="replace">替换图片
+                <input type="file" accept="image/*" data-key="${icon.key}">
+              </label>
+            </span>
+          </div>`;
+        stage.appendChild(el);
+        attachDrag(el, icon);
+        const fileInput = el.querySelector('input[type=file]');
+        fileInput.addEventListener('change', e => onFilePicked(e, icon));
+      });
+    }
+
+    function attachDrag(el, icon) {
+      let startX, startY, startL, startT, dragging = false;
+      el.addEventListener('pointerdown', e => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL') return;
+        dragging = true;
+        el.classList.add('dragging');
+        el.setPointerCapture(e.pointerId);
+        startX = e.clientX; startY = e.clientY;
+        startL = icon.pos_x; startT = icon.pos_y;
+        e.preventDefault();
+      });
+      el.addEventListener('pointermove', e => {
+        if (!dragging) return;
+        const rect = stage.getBoundingClientRect();
+        const dx = (e.clientX - startX) / rect.width * 100;
+        const dy = (e.clientY - startY) / rect.height * 100;
+        icon.pos_x = Math.max(0, Math.min(100, startL + dx));
+        icon.pos_y = Math.max(0, Math.min(100, startT + dy));
+        el.style.left = icon.pos_x + '%';
+        el.style.top = icon.pos_y + '%';
+      });
+      const end = e => { dragging = false; el.classList.remove('dragging'); };
+      el.addEventListener('pointerup', end);
+      el.addEventListener('pointercancel', end);
+    }
+
+    function onFilePicked(e, icon) {
+      const file = e.target.files[0];
+      if (!file) return;
+      icon._file = file;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = el_img(e);
+        if (img) img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+      setStatus(`已选择「${icon.label}」的新图片，点保存生效`, '#fbbf24');
+    }
+    function el_img(e) {
+      const wrap = e.target.closest('.editor-icon');
+      return wrap ? wrap.querySelector('img') : null;
+    }
+
+    function setStatus(msg, color) {
+      statusEl.textContent = msg;
+      statusEl.style.color = color || '#34d399';
+    }
+
+    function csrfHeaders() {
+      return { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' };
+    }
+
+    async function save() {
+      saveBtn.disabled = true;
+      try {
+        // 1) 先上传有改动的图片
+        for (const icon of state) {
+          if (icon._file) {
+            const fd = new FormData();
+            fd.append('image', icon._file);
+            const res = await fetch(`/api/hero-icons/${icon.key}/image/`, {
+              method: 'POST', headers: csrfHeaders(), body: fd, credentials: 'same-origin',
+            });
+            if (!res.ok) throw new Error(`上传「${icon.label}」失败`);
+            const data = await res.json();
+            icon.image = data.image;
+            icon._file = null;
+          }
+        }
+        // 2) 保存坐标
+        const payload = { icons: state.map(i => ({
+          key: i.key, pos_x: +i.pos_x.toFixed(2), pos_y: +i.pos_y.toFixed(2),
+          width: i.width, z_index: i.z_index,
+        })) };
+        const res = await fetch('/api/hero-icons/save/', {
+          method: 'POST',
+          headers: { ...csrfHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload), credentials: 'same-origin',
+        });
+        if (!res.ok) throw new Error('保存坐标失败');
+        setStatus('✅ 已保存并同步到首页', '#34d399');
+      } catch (err) {
+        setStatus('❌ ' + err.message, '#f87171');
+      } finally {
+        saveBtn.disabled = false;
+      }
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', save);
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      state.forEach((s, i) => Object.assign(s, ICONS[i]));
+      render(); setStatus('已重置为最近一次保存的状态', '#8888a0');
+    });
+
+    render();
+  </script>
+</body>
+</html>

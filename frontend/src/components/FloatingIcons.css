@@ -1,0 +1,225 @@
+.floating-icons {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.float-icon {
+  position: absolute;
+  width: 160px;
+  height: auto;
+  opacity: 0.92;
+  filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.4));
+  pointer-events: auto;
+  cursor: default;
+  /* 与后台编辑器一致：pos_x/pos_y 指图标「中心」位置 */
+  transform: translate(-50%, -50%) rotate(var(--rot, 0deg));
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.35s ease, opacity 0.3s ease;
+  /* 进场动画：加载完成后淡入 + 上浮 + 轻微放大；backwards 使延迟期间保持隐藏，结束后回归普通样式（hover 放大不受影响） */
+  animation: iconIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* 进场关键帧：保留定位所需的 translate(-50%,-50%)+旋转，叠加向上位移与缩放 */
+@keyframes iconIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--rot, 0deg)) translateY(30px) scale(0.82);
+  }
+  to {
+    opacity: 0.92;
+    transform: translate(-50%, -50%) rotate(var(--rot, 0deg)) translateY(0) scale(1);
+  }
+}
+
+/* 鼠标悬停放大（保留中心原点与旋转角度） */
+.float-icon:hover {
+  transform: translate(-50%, -50%) rotate(var(--rot, 0deg)) scale(1.12);
+  filter: drop-shadow(0 16px 40px rgba(0, 0, 0, 0.5));
+}
+
+/* 响应式：小屏缩小（pos_x/pos_y 同样指图标中心） */
+@media (max-width: 768px) {
+  .float-icon {
+    width: 80px;
+  }
+
+  .float-icon.top-left     { top: 24%; left: 28%; }
+  .float-icon.top-right    { top: 22%; right: 24%; }
+  .float-icon.bottom-left  { bottom: 26%; left: 26%; }
+  .float-icon.bottom-right { bottom: 24%; right: 22%; }
+}
+
+/* 相机图标可点击（仅它触发表情灯互动） */
+.float-icon.is-clickable {
+  cursor: pointer;
+}
+
+/* 终端弹窗出现时隐藏终端图标本身（弹窗消失后 class 移除自动恢复） */
+.float-icon.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 点击相机图标：整屏闪白一下，模拟拍照闪光灯，随后淡出恢复 */
+.camera-flash {
+  position: fixed;
+  inset: 0;
+  background: #ffffff;
+  z-index: 9999;
+  pointer-events: none;
+  animation: cameraFlash 0.6s ease-out forwards;
+}
+
+@keyframes cameraFlash {
+  0%   { opacity: 0; }
+  8%   { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
+/* ============================================================
+   三个图标的全屏点击特效：均覆盖整屏（pointer-events:none 不挡操作）
+   ============================================================ */
+
+/* ---- 访达：全屏冲击波（从图标位置向外扩散的环形光波 + 提亮） ---- */
+.finder-shock {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  overflow: hidden;
+}
+.shock-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--ox) var(--oy),
+    rgba(96, 165, 250, 0.30) 0%, rgba(96, 165, 250, 0.08) 35%, transparent 70%);
+  animation: shockFlash 1.4s ease-out forwards;
+}
+.shock-ring {
+  position: absolute;
+  left: var(--ox);
+  top: var(--oy);
+  width: 60px;
+  height: 60px;
+  margin: -30px 0 0 -30px;
+  border: 3px solid rgba(96, 165, 250, 0.85);
+  border-radius: 50%;
+  animation: shockRing 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.shock-ring--2 {
+  border-color: rgba(34, 211, 238, 0.7);
+  animation-delay: 0.16s;
+}
+@keyframes shockFlash {
+  0%   { opacity: 0; }
+  22%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes shockRing {
+  0%   { transform: scale(0.2); opacity: 0.9; }
+  100% { transform: scale(60);  opacity: 0; }
+}
+
+/* ---- 文件夹：局部文件抖落（彩色小方块从图标处飘落） ---- */
+.folder-drop {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  overflow: visible;
+}
+.drop-file {
+  position: absolute;
+  left: var(--ox);
+  top: var(--oy);
+  width: 20px;
+  height: 25px;
+  border-radius: 4px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  animation: dropFall 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes dropFall {
+  0%   { opacity: 0; transform: translate(-50%, -50%) translate(0, -12px) scale(0.3) rotate(0deg); }
+  18%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) translate(var(--dx), var(--dy)) scale(1) rotate(var(--dr)); }
+}
+
+/* ---- 终端：打字机（黑底绿字窗口从图标处弹出，逐字打印命令 + 输出） ---- */
+.terminal-box {
+  position: fixed;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  width: 230px;
+  border-radius: 10px;
+  background: rgba(8, 12, 20, 0.96);
+  border: 1px solid rgba(0, 255, 128, 0.25);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.55), 0 0 24px rgba(0, 255, 128, 0.12);
+  overflow: hidden;
+  font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  pointer-events: none;
+  animation: termPop 2.8s ease forwards;
+}
+.term-bar {
+  display: flex;
+  gap: 6px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.term-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.term-red    { background: #ff5f57; }
+.term-yellow { background: #febc2e; }
+.term-green  { background: #28c840; }
+.term-screen {
+  padding: 12px 14px;
+  color: #4ade80;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.term-line { white-space: nowrap; }
+.term-prompt { color: #22d3ee; }
+.term-cmd {
+  color: #e2e8f0;
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  vertical-align: bottom;
+  width: 0;
+  animation: typeCmd 0.6s steps(6) 0.35s forwards;   /* whoami = 6ch */
+}
+.term-out {
+  color: #4ade80;
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 0;
+  animation: typeOut 0.6s steps(7) 1.05s forwards;   /* yangfan = 7ch */
+}
+.term-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 15px;
+  background: #4ade80;
+  margin-left: 3px;
+  vertical-align: text-bottom;
+  animation: termBlink 1s step-end infinite;
+}
+@keyframes termPop {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+  8%   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  88%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.98); }
+}
+@keyframes typeCmd { to { width: 6ch; } }
+@keyframes typeOut { to { width: 7ch; } }
+@keyframes termBlink { 50% { opacity: 0; } }

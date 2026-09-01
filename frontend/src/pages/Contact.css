@@ -1,0 +1,473 @@
+/* ===== Contact Section ===== */
+.contact-section {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: transparent;   /* 统一背景由全局 .app-background 提供 */
+  color: var(--text-primary);
+}
+
+/* 装饰光晕已交由全局 .app-background 统一处理，区块内不再各自独立绘制 */
+
+/* ===== Layout ===== */
+.contact-layout {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100vh;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--section-pad-y) 24px 80px;
+}
+
+.contact-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 44px;
+  width: 100%;
+}
+
+/* ===== Title ===== */
+.contact-title {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.22em;
+  font-size: clamp(52px, 11vw, 140px);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  margin: 0;
+  opacity: 0;
+  animation: fadeInDown 0.9s ease 0.1s forwards;
+}
+
+.contact-title-line {
+  display: inline-block;
+}
+
+.contact-title-accent {
+  background: linear-gradient(135deg, #93c5fd 0%, #3b82f6 50%, #1d4ed8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 36px rgba(59, 130, 246, 0.3));
+}
+
+/* ===== Contact Card ===== */
+.contact-card {
+  width: min(800px, 92vw);
+  padding: 48px;
+  border-radius: 32px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px);
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  opacity: 0;
+  animation: fadeInUp 0.9s ease 0.28s forwards;
+}
+
+.contact-card-inner {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 48px;
+}
+
+/* ===== Contact List ===== */
+.contact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 0;
+}
+
+.contact-list-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.contact-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent-secondary);
+}
+
+.contact-list-heading {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.contact-list-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-list-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 18px;
+  margin: 0 -18px;
+  border-radius: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.contact-list-row:first-child {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* 悬浮态：低饱和冷调灰蓝，克制不抢眼，与灰默认态温和呼应 */
+.contact-list-row:hover {
+  background: linear-gradient(90deg, rgba(46, 60, 92, 0.4), rgba(38, 50, 80, 0.28));
+  border-color: rgba(96, 165, 250, 0.25);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 6px 18px rgba(0, 0, 0, 0.32);
+  transform: translateX(3px);
+}
+
+.contact-list-row:hover .contact-list-label {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.contact-list-row:hover .contact-list-label svg {
+  color: rgba(148, 176, 222, 0.92);
+  transform: scale(1.1);
+}
+
+.contact-list-row:hover .contact-list-value {
+  color: #ffffff;
+}
+
+/* 选中态（已复制）：比悬浮更深一档的实心蓝 + 左侧实色强调条，层级更高 */
+.contact-list-row.is-selected {
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.62), rgba(29, 78, 216, 0.42));
+  border-color: rgba(96, 165, 250, 0.6);
+  box-shadow:
+    inset 3px 0 0 rgba(96, 165, 250, 1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 22px rgba(0, 0, 0, 0.38);
+  transform: translateX(3px);
+}
+
+.contact-list-row.is-selected .contact-list-label {
+  color: #dbeafe;
+}
+
+.contact-list-row.is-selected .contact-list-label svg {
+  color: #bfdbfe;
+  transform: scale(1.16);
+}
+
+.contact-list-row.is-selected .contact-list-value {
+  color: #ffffff;
+}
+
+.contact-list-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.contact-list-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.38);
+  transition: color 0.3s ease;
+}
+
+.contact-list-label svg {
+  width: 18px;
+  height: 18px;
+  color: var(--accent-secondary);
+  transition: color 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), filter 0.3s ease;
+}
+
+.contact-list-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.3s ease;
+}
+
+/* ===== QR Code ===== */
+.contact-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+  transform: translateY(40px);
+}
+
+.contact-qr-frame {
+  width: 176px;
+  height: 176px;
+  padding: 16px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(59, 130, 246, 0.1),
+    inset 0 0 30px rgba(59, 130, 246, 0.06);
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.contact-qr-frame:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(59, 130, 246, 0.2),
+    0 0 40px rgba(59, 130, 246, 0.18),
+    inset 0 0 30px rgba(59, 130, 246, 0.08);
+}
+
+.contact-qr-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.contact-qr-caption {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* ===== Social Links ===== */
+.contact-social {
+  display: flex;
+  gap: 14px;
+  opacity: 0;
+  animation: fadeInUp 0.9s ease 0.46s forwards;
+}
+
+.contact-social-link {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.55);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.contact-social-link:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(59, 130, 246, 0.3);
+}
+
+/* ===== Copy Toast ===== */
+.contact-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 40px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 22px;
+  border-radius: 14px;
+  background: rgba(12, 18, 30, 0.92);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 22px rgba(59, 130, 246, 0.22);
+  backdrop-filter: blur(12px);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-50%) translateY(20px);
+  animation: toastIn 0.32s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.contact-toast-icon {
+  width: 17px;
+  height: 17px;
+  color: #4ade80;
+  flex-shrink: 0;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ===== Animations ===== */
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══ 浅色模式：纯白卡片 + 深色文字，修复浅底上白字不可见的问题 ═══ */
+[data-theme="light"] .contact-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 24px 70px rgba(15, 23, 42, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="light"] .contact-list-row {
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+[data-theme="light"] .contact-list-row:first-child {
+  border-top-color: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .contact-eyebrow { color: #2563eb; }
+
+[data-theme="light"] .contact-list-label { color: #64748b; }
+[data-theme="light"] .contact-list-label svg { color: #3b82f6; }
+[data-theme="light"] .contact-list-value { color: #0f172a; }
+
+/* 悬浮：浅蓝轻染，文字保持深色，克制清爽 */
+[data-theme="light"] .contact-list-row:hover {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.12), rgba(59, 130, 246, 0.05));
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+[data-theme="light"] .contact-list-row:hover .contact-list-label { color: #334155; }
+[data-theme="light"] .contact-list-row:hover .contact-list-label svg { color: #2563eb; }
+[data-theme="light"] .contact-list-row:hover .contact-list-value { color: #0f172a; }
+
+/* 选中态（已复制）：蓝色实底 + 白字，在浅色卡片上仍清晰可辨 */
+[data-theme="light"] .contact-list-row.is-selected {
+  box-shadow:
+    inset 3px 0 0 rgba(59, 130, 246, 1),
+    0 8px 22px rgba(59, 130, 246, 0.18);
+}
+
+[data-theme="light"] .contact-qr-frame {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 16px 40px rgba(15, 23, 42, 0.08),
+    0 0 0 1px rgba(59, 130, 246, 0.08),
+    inset 0 0 30px rgba(59, 130, 246, 0.04);
+}
+[data-theme="light"] .contact-qr-caption { color: #64748b; }
+
+[data-theme="light"] .contact-social-link {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.1);
+  color: #475569;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 760px) {
+  .contact-layout {
+    padding: 80px 20px 60px;
+  }
+
+  .contact-main {
+    gap: 36px;
+  }
+
+  .contact-card {
+    padding: 32px 24px;
+    border-radius: 24px;
+  }
+
+  .contact-card-inner {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .contact-list {
+    gap: 22px;
+  }
+
+  .contact-list-heading {
+    font-size: 18px;
+  }
+
+  .contact-list-row {
+    padding: 16px 0;
+    gap: 16px;
+  }
+
+  .contact-list-value {
+    font-size: 14px;
+  }
+
+  .contact-qr {
+    order: -1;
+    gap: 12px;
+    transform: none;
+  }
+
+  .contact-qr-frame {
+    width: 152px;
+    height: 152px;
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .contact-social-link {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    font-size: 18px;
+  }
+
+  .contact-toast {
+    bottom: 28px;
+    padding: 11px 18px;
+    font-size: 13px;
+    border-radius: 12px;
+  }
+}
