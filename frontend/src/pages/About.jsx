@@ -3,6 +3,7 @@ import { FiMail, FiPhone } from 'react-icons/fi'
 import api from '../api'
 import './About.css'
 import TiltedCard from '../components/TiltedCard/TiltedCard'
+import { asset } from '../utils/asset'
 
 const ORG_LOGOS = {
   '字节跳动': '/logos/bytedance.png',
@@ -13,7 +14,7 @@ const ORG_LOGOS = {
 function orgLogo(name) {
   if (!name) return null
   for (const key in ORG_LOGOS) {
-    if (name.includes(key)) return ORG_LOGOS[key]
+    if (name.includes(key)) return asset(ORG_LOGOS[key])
   }
   return null
 }
@@ -143,7 +144,7 @@ export default function About() {
               <div className="photo-card">
                 <span className="photo-badge">About Me</span>
                 {about.avatar ? (
-                  <img src={about.avatar} alt={about.name} className="photo-card-img" />
+                  <img src={asset(about.avatar)} alt={about.name} className="photo-card-img" />
                 ) : (
                   <div className="photo-placeholder">{about.name.slice(0, 3).toUpperCase() || 'FAN'}</div>
                 )}
@@ -200,7 +201,7 @@ export default function About() {
             ].map((s, i) => (
               <img
                 key={s.alt}
-                src={s.src}
+                src={asset(s.src)}
                 alt={s.alt}
                 title={s.title}
               />

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import api from '../api'
 import './FloatingIcons.css'
+import { asset } from '../utils/asset'
 
 // 各特效的总时长（与 CSS 动画时长保持一致，到点自动卸载）
 const EFFECT_DURATION = { finder: 1400, folder: 1200, terminal: 2800 }
@@ -141,7 +142,7 @@ export default function FloatingIcons({ onHoverChange }) {
         <img
           key={icon.key}
           className={`float-icon is-clickable${icon.key === 'terminal' && active === 'terminal' ? ' is-hidden' : ''}`}
-          src={icon.image.replace(/^https?:\/\/[^/]+/, '')}
+          src={asset(icon.image.replace(/^https?:\/\/[^/]+/, ''))}
           alt={icon.label}
           draggable={false}
           style={{

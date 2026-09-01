@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi'
 import './WorkGallery.css'
+import { asset } from '../utils/asset'
 
 // 根据视口宽度决定瀑布流列数（2 / 3 / 4）
 function useColumnCount() {
@@ -110,7 +111,7 @@ export default function WorkGallery({ category, images, loading, onClose }) {
                   onClick={(e) => { e.stopPropagation(); setFullscreenIdx(i) }}
                 >
                   <img
-                    src={img.image}
+                    src={asset(img.image)}
                     alt={img.title || `作品 ${img.id}`}
                     loading="lazy"
                     draggable={false}
@@ -132,7 +133,7 @@ export default function WorkGallery({ category, images, loading, onClose }) {
           <div className="gallery-zoom-frame">
             <img
               className="gallery-zoom-img"
-              src={images[fullscreenIdx].image}
+              src={asset(images[fullscreenIdx].image)}
               alt={images[fullscreenIdx].title || `作品 ${images[fullscreenIdx].id}`}
               draggable={false}
               onClick={(e) => e.stopPropagation()}

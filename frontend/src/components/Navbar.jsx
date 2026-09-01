@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { FiSun, FiMoon } from 'react-icons/fi'
 import { useTheme } from '../context/ThemeContext'
 import './Navbar.css'
+import { asset } from '../utils/asset'
 
 const NAV_ITEMS = [
   { label: '首页', id: 'hero' },
@@ -43,7 +44,7 @@ export default function Navbar() {
   return (
     <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
       <img
-        src="/logo.png"
+        src={asset('/logo.png')}
         alt="Logo"
         className="nav-logo"
         onClick={() => scrollTo('hero')}

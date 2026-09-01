@@ -4,6 +4,7 @@ import Aurora from './Aurora'
 import FloatingIcons from './FloatingIcons'
 import GradientText from './GradientText/GradientText'
 import './Hero.css'
+import { asset } from '../utils/asset'
 
 // 从后台配置的渐变字符串里提取颜色数组（供 GradientText 流动渐变使用）
 function parseGradientColors(str) {
@@ -84,13 +85,13 @@ export default function Hero() {
       {/* 背景层：图片 / 视频（在极光之下） */}
       <div className="hero-video-placeholder">
         {bgType === 'image' && bgImage && (
-          <img className="hero-bg-media" src={bgImage} alt="" />
+          <img className="hero-bg-media" src={asset(bgImage)} alt="" />
         )}
         {bgType === 'video' && bgVideo && (
           <video
             className="hero-bg-media"
-            src={bgVideo}
-            poster={bgPoster || undefined}
+            src={asset(bgVideo)}
+            poster={bgPoster ? asset(bgPoster) : undefined}
             autoPlay
             muted
             loop

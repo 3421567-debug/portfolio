@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { FiMail, FiPhone, FiGithub, FiInstagram, FiDribbble } from 'react-icons/fi'
 import './Contact.css'
+import { asset } from '../utils/asset'
 
 // 微信官方风格线框图标：双气泡 + 内部小圆点
 function WeChatIcon() {
@@ -136,7 +137,7 @@ export default function Contact() {
 
               <div className="contact-qr">
                 <div className="contact-qr-frame">
-                  <img src="/wechat-qr.png" alt="微信二维码" className="contact-qr-img" />
+                  <img src={asset('/wechat-qr.png')} alt="微信二维码" className="contact-qr-img" />
                 </div>
                 <span className="contact-qr-caption">Scan to add WeChat</span>
               </div>

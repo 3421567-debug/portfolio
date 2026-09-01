@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { FiX } from 'react-icons/fi'
 import './ImageModal.css'
+import { asset } from '../utils/asset'
 
 export default function ImageModal({ src, onClose }) {
   const [scale, setScale] = useState(1)
@@ -32,7 +33,7 @@ export default function ImageModal({ src, onClose }) {
 
       <div className="modal-content" onClick={e => e.stopPropagation()} onWheel={handleWheel}>
         <img
-          src={src}
+          src={asset(src)}
           alt="作品放大查看"
           style={{ transform: `scale(${scale})` }}
           draggable={false}
